@@ -1,0 +1,22 @@
+name: NetheriteWars
+version: '${project.version}'
+main: dev.dercoderjo.netheritewars.NetheriteWars
+api-version: '1.21'
+author: dercoderjo
+commands:
+  kill:
+    description: Kills yourself
+    usage: /kill
+    default: true
+  peace:
+    description: Peace mode
+    usage: /peace
+    default: true
+    aliases:
+      - frieden
+  nopeace:
+    description: No Peace mode
+    usage: /unpeace
+    default: true
+    aliases:
+      - keinfrieden

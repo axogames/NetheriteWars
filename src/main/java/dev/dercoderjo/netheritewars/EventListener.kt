@@ -8,17 +8,21 @@ import dev.dercoderjo.netheritewars.util.spawnNetheriteBlockEntity
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.*
+import org.bukkit.block.Block
 import org.bukkit.block.BlockState
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
-import org.bukkit.entity.LivingEntity
+import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
-import org.bukkit.event.inventory.*
+import org.bukkit.event.entity.EntityDeathEvent
+import org.bukkit.event.entity.EntityExplodeEvent
+import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerMoveEvent
@@ -39,10 +43,11 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         if (!plugin.DATABASE.checkPlayer(event.player.uniqueId.toString()) || !plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).whitelisted) {
-            event.player.kick(Component.text("Du bist nicht auf der Whitelist!").color(NamedTextColor.RED)
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Bitte wende dich an ein Teammitglied").color(NamedTextColor.DARK_GREEN))
+            event.player.kick(
+                Component.text("Du bist nicht auf der Whitelist!").color(NamedTextColor.RED)
+                    .append(Component.newline())
+                    .append(Component.newline())
+                    .append(Component.text("Bitte wende dich an ein Teammitglied").color(NamedTextColor.DARK_GREEN))
             )
         }
 
@@ -88,15 +93,25 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
                 event.player.inventory.addItem(ItemStack(Material.NETHERITE_INGOT, 16 - netheriteCount))
             }
 
-            event.player.world.dropItem(event.player.location, ItemStack(Material.NETHERITE_INGOT, droppingNetheriteCount - 16).apply {
-                val meta = itemMeta
-                meta?.setEnchantmentGlintOverride(true)
-                itemMeta = meta
-            }).apply {
+            event.player.world.dropItem(
+                event.player.location,
+                ItemStack(Material.NETHERITE_INGOT, droppingNetheriteCount - 16).apply {
+                    val meta = itemMeta
+                    meta?.setEnchantmentGlintOverride(true)
+                    itemMeta = meta
+                }).apply {
                 isCustomNameVisible = true
                 isGlowing = true
-                persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 60000)
-                persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_owner"), PersistentDataType.STRING, event.player.uniqueId.toString())
+                persistentDataContainer.set(
+                    NamespacedKey("netheritewars", "netherite_cooldown"),
+                    PersistentDataType.LONG,
+                    System.currentTimeMillis() + 60000
+                )
+                persistentDataContainer.set(
+                    NamespacedKey("netheritewars", "netherite_owner"),
+                    PersistentDataType.STRING,
+                    event.player.uniqueId.toString()
+                )
             }
         }
     }
@@ -113,17 +128,24 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         for (world in Bukkit.getWorlds()) {
             for (entity in world.entities) {
                 if (entity.type == EntityType.ITEM) {
-                    val cooldown = entity.persistentDataContainer.get(NamespacedKey("netheritewars", "netherite_cooldown"), PersistentDataType.LONG) ?: continue
+                    val cooldown = entity.persistentDataContainer.get(
+                        NamespacedKey("netheritewars", "netherite_cooldown"),
+                        PersistentDataType.LONG
+                    ) ?: continue
 
                     if (cooldown < System.currentTimeMillis()) {
                         entity.persistentDataContainer.remove(NamespacedKey("netheritewars", "netherite_cooldown"))
                         entity.persistentDataContainer.remove(NamespacedKey("netheritewars", "netherite_owner"))
                         entity.customName(Component.empty())
                     } else {
-                        entity.customName(Component.text()
-                            .append(Component.text("Cooldown: ").color(NamedTextColor.RED))
-                            .append(Component.text(floor((cooldown - System.currentTimeMillis()).toDouble() / 1000).toInt()).color(NamedTextColor.WHITE))
-                            .build()
+                        entity.customName(
+                            Component.text()
+                                .append(Component.text("Cooldown: ").color(NamedTextColor.RED))
+                                .append(
+                                    Component.text(floor((cooldown - System.currentTimeMillis()).toDouble() / 1000).toInt())
+                                        .color(NamedTextColor.WHITE)
+                                )
+                                .build()
                         )
                     }
                 }
@@ -163,7 +185,10 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onPlayerPickItem(event: PlayerAttemptPickupItemEvent) {
-        val owner = event.item.persistentDataContainer.get(NamespacedKey("netheritewars", "netherite_owner"), PersistentDataType.STRING) ?: return
+        val owner = event.item.persistentDataContainer.get(
+            NamespacedKey("netheritewars", "netherite_owner"),
+            PersistentDataType.STRING
+        ) ?: return
 
         if (owner != event.player.uniqueId.toString()) {
             event.isCancelled = true
@@ -172,7 +197,12 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onPlayerPlaceBlock(event: BlockPlaceEvent) {
-        if (event.itemInHand.type == Material.NETHERITE_BLOCK && event.block.world.getBlockAt(event.block.location.x.toInt(), 70, event.block.location.z.toInt()).type != Material.BEDROCK) {
+        if (event.itemInHand.type == Material.NETHERITE_BLOCK && event.block.world.getBlockAt(
+                event.block.location.x.toInt(),
+                70,
+                event.block.location.z.toInt()
+            ).type != Material.BEDROCK
+        ) {
             event.isCancelled = true
         }
     }
@@ -186,10 +216,16 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             if ((abs(event.entity.location.z) < borderSize || abs(causingEntityLocationZ) < borderSize || event.entity.world.environment != World.Environment.NORMAL) && event.entity.type == EntityType.PLAYER) {
                 event.isCancelled = true
 
-                (event.damageSource.causingEntity as Player).sendMessage(Component.text("Du kannst Spieler nicht auf der Grenze töten!").color(NamedTextColor.RED))
+                (event.damageSource.causingEntity as Player).sendMessage(
+                    Component.text("Du kannst Spieler nicht auf der Grenze töten!").color(NamedTextColor.RED)
+                )
             }
 
-            if (event.damageSource.causingEntity?.persistentDataContainer?.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
+            if (event.damageSource.causingEntity?.persistentDataContainer?.get(
+                    NamespacedKey("netheritewars", "peace"),
+                    PersistentDataType.BOOLEAN
+                ) == true
+            ) {
                 event.isCancelled = true
             }
         }
@@ -197,10 +233,18 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         if (event.entity is Player) {
             if ((event.entity as Player).health - event.damage <= 0.0) {
                 (event.entity as Player).gameMode = GameMode.SPECTATOR
-                event.entity.persistentDataContainer.set(NamespacedKey("netheritewars", "respawn_time"), PersistentDataType.LONG, event.entity.world.gameTime + (24000 - event.entity.world.time))
+                event.entity.persistentDataContainer.set(
+                    NamespacedKey("netheritewars", "respawn_time"),
+                    PersistentDataType.LONG,
+                    event.entity.world.gameTime + (24000 - event.entity.world.time)
+                )
             }
 
-            if (event.entity.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
+            if (event.entity.persistentDataContainer.get(
+                    NamespacedKey("netheritewars", "peace"),
+                    PersistentDataType.BOOLEAN
+                ) == true
+            ) {
                 event.isCancelled = true
             }
         }
@@ -229,5 +273,19 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     @EventHandler
     fun onLootGenerate(event: LootGenerateEvent) {
         event.setLoot(event.loot.filter { it.type != Material.NETHERITE_INGOT })
+    }
+
+
+    @EventHandler
+    fun onEntityDamage(e: EntityDamageByEntityEvent) {
+        if ((e.cause == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION || e.cause == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION)
+            && (e.entity.type == EntityType.ITEM)
+        ) {
+            val item = e.entity as Item
+            val mat = item.itemStack.type
+            if (mat == Material.NETHERITE_INGOT || mat == Material.NETHERITE_BLOCK || mat == Material.NETHERITE_SCRAP) {
+                e.isCancelled = true
+            }
+        }
     }
 }

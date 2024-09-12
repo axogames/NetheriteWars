@@ -20,3 +20,7 @@ commands:
     default: true
     aliases:
       - keinfrieden
+  gift:
+    description: Sets a netherite-gift.
+    usage: /gift <amount> <type>
+    default: true

@@ -48,7 +48,7 @@ class Database(plugin: NetheriteWars) {
 }
 
 
-class Player(val uuid: String, val netherite: Int, val deaths: Int, var position: Position, val team: Teams, val whitelisted: Boolean) {
+class Player(val uuid: String, val netherite: Int, val deaths: Int, var position: Position, val team: Teams, val whitelisted: Boolean, val orga: Boolean = false) {
 }
 
 class Team(val team: Teams, var netherite: Int) {

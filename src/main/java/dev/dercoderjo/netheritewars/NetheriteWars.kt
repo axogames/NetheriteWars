@@ -6,6 +6,7 @@ import dev.dercoderjo.netheritewars.command.PeaceCommand
 import dev.dercoderjo.netheritewars.common.Database
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import or.NOahhh_xd.testPlugin.GiftCommand
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.NamespacedKey
@@ -31,6 +32,7 @@ class NetheriteWars : JavaPlugin() {
         this.getCommand("kill")?.setExecutor(KillCommand())
         this.getCommand("peace")?.setExecutor(PeaceCommand())
         this.getCommand("nopeace")?.setExecutor(NoPeaceCommand())
+        this.getCommand("gift")?.setExecutor(GiftCommand(this))
 
         Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply { displaySlot = DisplaySlot.PLAYER_LIST } ?: Bukkit.getScoreboardManager().mainScoreboard.registerNewObjective("netheritewars:netherite_player", Criteria.DUMMY, Component.empty()).apply { displaySlot = DisplaySlot.PLAYER_LIST }
 

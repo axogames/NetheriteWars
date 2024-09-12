@@ -24,3 +24,7 @@ commands:
     description: Sets a netherite-gift.
     usage: /gift <amount> <type>
     default: true
+  battleroyale:
+    description: Battle Royale
+    usage: /battleroyale
+    default: true

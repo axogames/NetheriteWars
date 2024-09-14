@@ -4,7 +4,6 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import kotlin.math.floor
 
 fun checkInventory(player: Player): Int {
     var netheriteCount = 0
@@ -21,8 +20,8 @@ fun checkInventory(player: Player): Int {
         player.isGliding = false
     }
 
-    val slownessStrength = floor(netheriteCount / 72.0).toInt()
-    val weaknessStrength = floor(netheriteCount / 31.0).toInt()
+    val slownessStrength = (netheriteCount / 72.0).toInt()
+    val weaknessStrength = (netheriteCount / 31.0).toInt()
     if (player.getPotionEffect(PotionEffectType.SLOWNESS)?.duration == -1) player.removePotionEffect(PotionEffectType.SLOWNESS)
     if (player.getPotionEffect(PotionEffectType.WEAKNESS)?.duration == -1) player.removePotionEffect(PotionEffectType.WEAKNESS)
     if (slownessStrength > 0) player.addPotionEffect(PotionEffect(PotionEffectType.SLOWNESS, -1, slownessStrength - 1, false, false, true))

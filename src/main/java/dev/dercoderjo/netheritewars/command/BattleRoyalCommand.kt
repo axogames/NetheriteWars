@@ -36,7 +36,7 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.PREPARED, null, null))
             sender.sendMessage("Battle Royal prepared")
 
-            Bukkit.getWorld("world")?.worldBorder?.setSize(50.0, 0)
+            Bukkit.getWorld("world")?.worldBorder?.setSize(48.0, 0)
             for (player in Bukkit.getOnlinePlayers()) {
                 player.teleport(Location(player.world, 0.0, 100.0, 0.0))
                 if (player.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {

@@ -1,9 +1,11 @@
 package dev.dercoderjo.netheritewars
 
 import com.destroystokyo.paper.event.server.ServerTickEndEvent
+import dev.dercoderjo.netheritewars.common.BattleRoyalStatus
 import dev.dercoderjo.netheritewars.common.Teams
 import dev.dercoderjo.netheritewars.util.checkInventory
 import dev.dercoderjo.netheritewars.util.checkPosition
+import dev.dercoderjo.netheritewars.util.convertTime
 import dev.dercoderjo.netheritewars.util.spawnNetheriteBlockEntity
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -90,25 +92,15 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
                 event.player.inventory.addItem(ItemStack(Material.NETHERITE_INGOT, 16 - netheriteCount))
             }
 
-            event.player.world.dropItem(
-                event.player.location,
-                ItemStack(Material.NETHERITE_INGOT, droppingNetheriteCount - 16).apply {
-                    val meta = itemMeta
-                    meta?.setEnchantmentGlintOverride(true)
-                    itemMeta = meta
-                }).apply {
+            event.player.world.dropItem(event.player.location, ItemStack(Material.NETHERITE_INGOT, droppingNetheriteCount - 16).apply {
+                val meta = itemMeta
+                meta?.setEnchantmentGlintOverride(true)
+                itemMeta = meta
+            }).apply {
                 isCustomNameVisible = true
                 isGlowing = true
-                persistentDataContainer.set(
-                    NamespacedKey("netheritewars", "netherite_cooldown"),
-                    PersistentDataType.LONG,
-                    System.currentTimeMillis() + 60000
-                )
-                persistentDataContainer.set(
-                    NamespacedKey("netheritewars", "netherite_owner"),
-                    PersistentDataType.STRING,
-                    event.player.uniqueId.toString()
-                )
+                persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 60000)
+                persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_owner"), PersistentDataType.STRING, event.player.uniqueId.toString())
             }
         }
     }
@@ -178,6 +170,16 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
                 }
             }
         }
+
+        if (plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.STARTED || plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.PAUSED) {
+            val formatedTime = if (plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.STARTED) {
+                convertTime(plugin.cachedBattleRoyalData?.endsAt!! - System.currentTimeMillis())
+            } else {
+                convertTime((plugin.cachedBattleRoyalData?.endsAt!! - plugin.cachedBattleRoyalData?.pausedAt!!) - System.currentTimeMillis())
+            }
+
+            Bukkit.getServer().sendActionBar(Component.text(formatedTime, NamedTextColor.GREEN))
+        }
     }
 
     @EventHandler
@@ -209,40 +211,29 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
         val causingEntityLocationZ = event.damageSource.causingEntity?.location?.z ?: (borderSize + 1.0)
 
+        if (plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.PREPARED || plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.PAUSED) {
+            event.isCancelled = true
+            return
+        }
+
         if (event.damageSource.causingEntity is Player) {
             if ((abs(event.entity.location.z) < borderSize || abs(causingEntityLocationZ) < borderSize || event.entity.world.environment != World.Environment.NORMAL) && event.entity.type == EntityType.PLAYER) {
                 event.isCancelled = true
 
-                (event.damageSource.causingEntity as Player).sendMessage(
-                    Component.text("Du kannst Spieler nicht auf der Grenze töten!").color(NamedTextColor.RED)
-                )
+                (event.damageSource.causingEntity as Player).sendMessage(Component.text("Du kannst Spieler nicht auf der Grenze töten!").color(NamedTextColor.RED))
             }
 
-            if (event.damageSource.causingEntity?.persistentDataContainer?.get(
-                    NamespacedKey("netheritewars", "peace"),
-                    PersistentDataType.BOOLEAN
-                ) == true
-            ) {
-                event.isCancelled = true
+            if (event.entity is Player) {
+                if (event.entity.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
+                    event.isCancelled = true
+                }
             }
         }
 
         if (event.entity is Player) {
             if ((event.entity as Player).health - event.damage <= 0.0) {
                 (event.entity as Player).gameMode = GameMode.SPECTATOR
-                event.entity.persistentDataContainer.set(
-                    NamespacedKey("netheritewars", "respawn_time"),
-                    PersistentDataType.LONG,
-                    event.entity.world.gameTime + (24000 - event.entity.world.time)
-                )
-            }
-
-            if (event.entity.persistentDataContainer.get(
-                    NamespacedKey("netheritewars", "peace"),
-                    PersistentDataType.BOOLEAN
-                ) == true
-            ) {
-                event.isCancelled = true
+                event.entity.persistentDataContainer.set(NamespacedKey("netheritewars", "respawn_time"), PersistentDataType.LONG, event.entity.world.gameTime + (24000 - event.entity.world.time))
             }
         }
     }
@@ -268,10 +259,26 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     }
 
     @EventHandler
+    fun onBlockPlace(event: BlockPlaceEvent) {
+        if (event.block.type == Material.NETHERITE_BLOCK) {
+            val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
+
+            if (team == Teams.BLUE) {
+                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.BLUE).apply {
+                    netherite = plugin.DATABASE.getTeam(Teams.BLUE).netherite + 9
+                })
+            } else if (team == Teams.RED) {
+                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.RED).apply {
+                    netherite = plugin.DATABASE.getTeam(Teams.RED).netherite + 9
+                })
+            }
+        }
+    }
+
+    @EventHandler
     fun onLootGenerate(event: LootGenerateEvent) {
         event.setLoot(event.loot.filter { it.type != Material.NETHERITE_INGOT })
     }
-
 
     @EventHandler
     fun onEntityDamage(e: EntityDamageByEntityEvent) {

@@ -1,9 +1,12 @@
 package dev.dercoderjo.netheritewars
 
+import dev.dercoderjo.netheritewars.command.BattleRoyalCommand
 import dev.dercoderjo.netheritewars.command.KillCommand
 import dev.dercoderjo.netheritewars.command.NoPeaceCommand
 import dev.dercoderjo.netheritewars.command.PeaceCommand
+import dev.dercoderjo.netheritewars.common.BattleRoyal
 import dev.dercoderjo.netheritewars.common.Database
+import dev.dercoderjo.netheritewars.util.checkInventory
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import or.NOahhh_xd.testPlugin.GiftCommand
@@ -21,6 +24,7 @@ class NetheriteWars : JavaPlugin() {
     val CONFIG = config
     val LOGGER = logger
     val DATABASE = Database(this)
+    var cachedBattleRoyalData: BattleRoyal? = null
 
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(EventListener(this), this)
@@ -30,11 +34,24 @@ class NetheriteWars : JavaPlugin() {
         Bukkit.removeRecipe(NamespacedKey("minecraft", "netherite_ingot"))
 
         this.getCommand("kill")?.setExecutor(KillCommand())
-        this.getCommand("peace")?.setExecutor(PeaceCommand())
+        this.getCommand("peace")?.setExecutor(PeaceCommand(this))
         this.getCommand("nopeace")?.setExecutor(NoPeaceCommand())
         this.getCommand("gift")?.setExecutor(GiftCommand(this))
+        this.getCommand("battleroyale")?.setExecutor(BattleRoyalCommand(this))
+        this.getCommand("battleroyale")?.tabCompleter = BattleRoyalCommand(this)
+
 
         Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply { displaySlot = DisplaySlot.PLAYER_LIST } ?: Bukkit.getScoreboardManager().mainScoreboard.registerNewObjective("netheritewars:netherite_player", Criteria.DUMMY, Component.empty()).apply { displaySlot = DisplaySlot.PLAYER_LIST }
+        if (Bukkit.getScoreboardManager().mainScoreboard.getTeam("red") == null) {
+            Bukkit.getScoreboardManager().mainScoreboard.registerNewTeam("red").apply {
+                color(NamedTextColor.RED)
+            }
+        }
+        if (Bukkit.getScoreboardManager().mainScoreboard.getTeam("blue") == null) {
+            Bukkit.getScoreboardManager().mainScoreboard.registerNewTeam("blue").apply {
+                color(NamedTextColor.BLUE)
+            }
+        }
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, {
             for (player in Bukkit.getOnlinePlayers()) {
@@ -44,12 +61,24 @@ class NetheriteWars : JavaPlugin() {
                     player.persistentDataContainer.remove(NamespacedKey("netheritewars", "respawn_time"))
                 }
 
-                if (player.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
+                if (player.persistentDataContainer.get(
+                        NamespacedKey("netheritewars", "peace"),
+                        PersistentDataType.BOOLEAN
+                    ) == true
+                ) {
                     player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, 30, 0, false, false, false))
                     player.sendActionBar(Component.text("Friedensmodus aktiviert", NamedTextColor.GREEN))
                 }
+
+                DATABASE.setPlayer(
+                    DATABASE.getPlayer(player.uniqueId.toString()).apply {
+                        netherite = checkInventory(player)
+                    }
+                )
             }
         }, 0, 20)
+
+        cachedBattleRoyalData = DATABASE.getBattleRoyal()
     }
 
     override fun onDisable() {

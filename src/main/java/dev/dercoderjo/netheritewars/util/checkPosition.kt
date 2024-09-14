@@ -20,6 +20,12 @@ fun checkPosition(plugin: NetheriteWars, player: Player) {
     val dbPlayer = plugin.DATABASE.getPlayer(player.uniqueId.toString())
 
 
+    if (dbPlayer.team == Teams.RED) {
+        player.scoreboard.getTeam("red")?.addEntry(player.name)
+    } else if (dbPlayer.team == Teams.BLUE) {
+        player.scoreboard.getTeam("blue")?.addEntry(player.name)
+    }
+
     for (bossBar in player.activeBossBars()) {
         if (bossBar.name() == borderBossBarName) {
             player.hideBossBar(bossBar)

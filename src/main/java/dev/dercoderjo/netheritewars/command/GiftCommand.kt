@@ -354,6 +354,7 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor {
         if (sender !is Player) return false
 
         val p = sender
+        plugin.LOGGER.info(plugin.DATABASE.getPlayer(p.uniqueId.toString()).orga.toString())
         if (!plugin.DATABASE.getPlayer(p.uniqueId.toString()).orga) {
             p.sendMessage(Component.text("Das darfst du nicht machen!"))
             return false

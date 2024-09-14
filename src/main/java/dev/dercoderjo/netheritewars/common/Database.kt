@@ -2,27 +2,62 @@ package dev.dercoderjo.netheritewars.common
 
 import dev.dercoderjo.netheritewars.NetheriteWars
 import java.sql.DriverManager
+import java.sql.Timestamp
 
 class Database(plugin: NetheriteWars) {
     val connection = DriverManager.getConnection(plugin.CONFIG.getString("DATABASE.URL"), plugin.CONFIG.getString("DATABASE.USER"), plugin.CONFIG.getString("DATABASE.PASSWORD"))
     val statement = connection.createStatement()
 
     fun getPlayer(uuid: String): Player {
-        val playerSet = statement.executeQuery("SELECT * FROM players WHERE uuid = '$uuid'")
+        val query = "SELECT * FROM players WHERE uuid = ?"
+        val pstmt = connection.prepareStatement(query)
+        pstmt.setString(1, uuid)
+
+        val playerSet = pstmt.executeQuery()
+
         return if (playerSet.next()) {
-            Player(playerSet.getString("uuid"), playerSet.getInt("netherite"), playerSet.getInt("deaths"), Position.valueOf(playerSet.getString("position")), Teams.valueOf(playerSet.getString("team")), playerSet.getBoolean("whitelisted"))
+            Player(
+                playerSet.getString("uuid"),
+                playerSet.getInt("netherite"),
+                playerSet.getInt("deaths"),
+                Position.valueOf(playerSet.getString("position")),
+                Teams.valueOf(playerSet.getString("team")),
+                playerSet.getBoolean("whitelisted"),
+                playerSet.getBoolean("orga")
+            )
         } else {
-            Player(uuid, 0, 0, Position.BORDER, Teams.UNSET, false)
+            Player(uuid, 0, 0, Position.BORDER, Teams.UNSET, false, false)
         }
     }
 
     fun setPlayer(playerData: Player) {
-        if (checkPlayer(playerData.uuid)) {
-            statement.executeUpdate("UPDATE players SET netherite = ${playerData.netherite}, deaths = ${playerData.deaths}, position = '${playerData.position}', team = '${playerData.team}', whitelisted = '${if (playerData.whitelisted) 1 else 0}' WHERE uuid = '${playerData.uuid}'")
-            return
+        val query = if (checkPlayer(playerData.uuid)) {
+            "UPDATE players SET netherite = ?, deaths = ?, position = ?, team = ?, whitelisted = ?, orga = ? WHERE uuid = ?"
         } else {
-            statement.executeUpdate("INSERT INTO players (uuid, netherite, deaths, position, team, whitelisted) VALUES ('${playerData.uuid}', ${playerData.netherite}, ${playerData.deaths}, '${playerData.position}', '${playerData.team}', '${if (playerData.whitelisted) 1 else 0}')")
+            "INSERT INTO players (uuid, netherite, deaths, position, team, whitelisted, orga) VALUES (?, ?, ?, ?, ?, ?, ?)"
         }
+
+        val pstmt = connection.prepareStatement(query)
+
+        if (checkPlayer(playerData.uuid)) {
+            pstmt.setInt(1, playerData.netherite)
+            pstmt.setInt(2, playerData.deaths)
+            pstmt.setString(3, playerData.position.name)
+            pstmt.setString(4, playerData.team.name)
+            pstmt.setBoolean(5, playerData.whitelisted)
+            pstmt.setBoolean(6, playerData.orga)
+            pstmt.setString(7, playerData.uuid)
+        } else {
+            pstmt.setString(1, playerData.uuid)
+            pstmt.setInt(2, playerData.netherite)
+            pstmt.setInt(3, playerData.deaths)
+            pstmt.setString(4, playerData.position.name)
+            pstmt.setString(5, playerData.team.name)
+            pstmt.setBoolean(6, playerData.whitelisted)
+            pstmt.setBoolean(7, playerData.orga)
+        }
+
+        pstmt.executeUpdate()
     }
 
     fun checkPlayer(uuid: String): Boolean {
@@ -45,13 +80,60 @@ class Database(plugin: NetheriteWars) {
         println(team.netherite)
         statement.executeUpdate("UPDATE teams SET netherite = ${team.netherite} WHERE color = '${team.team}'")
     }
+
+    fun getBattleRoyal(): BattleRoyal {
+        val stmt = connection.prepareStatement("SELECT * FROM battle_royal WHERE status != 'ENDED' ORDER BY ends_at DESC LIMIT 1")
+        val resultSet = stmt.executeQuery()
+        return if (resultSet.next()) {
+            BattleRoyal(BattleRoyalStatus.valueOf(resultSet.getString("status")), resultSet.getTimestamp("ends_at")?.time, resultSet.getTimestamp("paused_at")?.time)
+        } else {
+            BattleRoyal(null, null, null)
+        }
+    }
+
+    fun setBattleRoyal(battleRoyal: BattleRoyal) {
+        val stmt = connection.prepareStatement("SELECT * FROM battle_royal WHERE status != 'ENDED'")
+        val resultSet = stmt.executeQuery()
+        if (resultSet.next()) {
+            val updateStmt = connection.prepareStatement("UPDATE battle_royal SET status = ?, ends_at = ?, paused_at = ? WHERE status != 'ENDED'")
+            updateStmt.setString(1, battleRoyal.status?.name)
+            if (battleRoyal.endsAt != null) {
+                updateStmt.setTimestamp(2, Timestamp(battleRoyal.endsAt))
+            } else {
+                updateStmt.setNull(2, java.sql.Types.BIGINT)
+            }
+            if (battleRoyal.pausedAt != null) {
+                updateStmt.setTimestamp(3, Timestamp(battleRoyal.pausedAt))
+            } else {
+                updateStmt.setNull(3, java.sql.Types.BIGINT)
+            }
+            updateStmt.executeUpdate()
+        } else {
+            val insertStmt = connection.prepareStatement("INSERT INTO battle_royal (status, ends_at, paused_at) VALUES (?, ?, ?)")
+            insertStmt.setString(1, battleRoyal.status?.name)
+            if (battleRoyal.endsAt != null) {
+                insertStmt.setTimestamp(2, Timestamp(battleRoyal.endsAt))
+            } else {
+                insertStmt.setNull(2, java.sql.Types.BIGINT)
+            }
+            if (battleRoyal.pausedAt != null) {
+                insertStmt.setTimestamp(3, Timestamp(battleRoyal.pausedAt))
+            } else {
+                insertStmt.setNull(3, java.sql.Types.BIGINT)
+            }
+            insertStmt.executeUpdate()
+        }
+    }
 }
 
 
-class Player(val uuid: String, val netherite: Int, val deaths: Int, var position: Position, val team: Teams, val whitelisted: Boolean, val orga: Boolean = false) {
+class Player(val uuid: String, var netherite: Int, val deaths: Int, var position: Position, val team: Teams, val whitelisted: Boolean, val orga: Boolean) {
 }
 
 class Team(val team: Teams, var netherite: Int) {
+}
+
+class BattleRoyal(val status: BattleRoyalStatus?, val endsAt: Long?, val pausedAt: Long?) {
 }
 
 enum class Position {
@@ -64,4 +146,11 @@ enum class Teams {
     BLUE,
     RED,
     UNSET
+}
+
+enum class BattleRoyalStatus {
+    PREPARED,
+    STARTED,
+    ENDED,
+    PAUSED
 }

@@ -359,9 +359,9 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor {
             p.sendMessage(Component.text("Das darfst du nicht machen!"))
             return false
         }
-        val world = p.world
         if (args.isEmpty()) {
-            sender.sendMessage(Component.text("/chest <amount_of_netherite_blocks>"))
+            sender.sendMessage(Component.text("/gift <amount_of_netherite_blocks>"))
+            return false
         }
 
         val num: Int
@@ -371,12 +371,18 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor {
             p.sendMessage(Component.text(args[0] + " ist keine wirkliche Zahl"))
             return false
         }
+
+        if (num > 175) {
+            p.sendMessage(Component.text("Es können maximal 175 NetheriteBlöcke platziert werden. Du wolltest $num platzieren"))
+            return false
+        }
+
         val pLoc = p.location
         for (b in chest) {
             copyLocation(pLoc).add(b.relativePos).block.type = b.mat
         }
 
-        if (args.size == 1 || args.size == 2 && args[1] == "random") {
+        if (args.size == 1 || (args.size == 2 && args[1] == "random")) {
             setNetheriteBlocksRandom(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
         } else if (args.size == 2) {
             if (args[1] == "standard")
@@ -390,7 +396,7 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor {
     }
 
     private fun setNetheriteBlocksRandom(loc: Location, num: Int) {
-        var num = num
+        var blockCount = num
         val fields = IntArray(25)
         val rand = Random()
         while (num > 0) {
@@ -399,17 +405,16 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor {
             val z = i % 5 - 2
             copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble()).block.type =
                 Material.NETHERITE_BLOCK
-            num--
+            blockCount--
         }
     }
 
     private fun setNetheriteBlocksInBlocks(loc: Location, num: Int) {
-        var num = num
+        var blockCount = num - 1
         val fields = IntArray(25)
         val rand = Random()
         val lastPos = rand.nextInt(25)
         fields[lastPos] = 1
-        num--
         while (num > 0) {
             if (rand.nextInt(10) > 6) {
                 val i = rand.nextInt(4)
@@ -449,20 +454,20 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor {
                 (lastPos % 5 - 2).toDouble()
             ).block.type =
                 Material.NETHERITE_BLOCK
-            num--
+            blockCount--
         }
     }
 
-    private fun setNetheriteBlocks(pLoc: Location, count: Int) {
-        var count = count
-        val height = count / 25
+    private fun setNetheriteBlocks(pLoc: Location, num: Int) {
+        var blockCount = num
+        val height = blockCount / 25
         for (j in 0..height) {
             for (i in -2..2) {
                 for (k in -2..2) {
                     val loc = copyLocation(pLoc).add(i.toDouble(), j.toDouble(), k.toDouble())
                     loc.block.type = Material.NETHERITE_BLOCK
-                    count--
-                    if (count <= 0) {
+                    blockCount--
+                    if (blockCount <= 0) {
                         return
                     }
                 }

@@ -14,16 +14,14 @@ import org.bukkit.command.TabExecutor
 import org.bukkit.persistence.PersistentDataType
 
 class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, TabExecutor {
-    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): MutableList<String>? {
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): MutableList<String> {
         return if (args[0] == "addtime") {
             mutableListOf(args[1] + "s", args[1] + "m", args[1] + "h")
         } else {
             if (args.size != 1) {
                 mutableListOf("prepare", "start", "pause", "unpause", "addtime", "end")
-            } else if (args.size >= 1) {
-                mutableListOf("prepare", "start", "pause", "unpause", "addtime", "end").filter { it.startsWith(args[0]) }.toMutableList()
             } else {
-                null
+                mutableListOf("prepare", "start", "pause", "unpause", "addtime", "end").filter { it.startsWith(args[0]) }.toMutableList()
             }
         }
     }

@@ -16,10 +16,11 @@ commands:
       - frieden
   nopeace:
     description: No Peace mode
-    usage: /unpeace
+    usage: /nopeace
     default: true
     aliases:
       - keinfrieden
+      - unpeace
   gift:
     description: Sets a netherite-gift.
     usage: /gift <anzahl> <typ>
@@ -31,3 +32,10 @@ commands:
   addnetherite:
     description: Add Netherite Blocks to Team
     usage: /addnetherite <team> <anzahl>
+    default: true
+  removenetherite:
+    description: Remove Netherite Blocks from a Team
+    usage: /removenetherite <team> <anzahl>
+    default: true
+    aliases:
+      - remnetherite

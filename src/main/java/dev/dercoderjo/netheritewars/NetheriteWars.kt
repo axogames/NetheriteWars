@@ -37,6 +37,8 @@ class NetheriteWars : JavaPlugin() {
         this.getCommand("battleroyale")?.tabCompleter = BattleRoyalCommand(this)
         this.getCommand("addnetherite")?.setExecutor(AddNetheriteCommand(this))
         this.getCommand("addnetherite")?.tabCompleter = AddNetheriteCommand(this)
+        this.getCommand("removenetherite")?.setExecutor(RemoveNetheriteCommand(this))
+        this.getCommand("removenetherite")?.tabCompleter = RemoveNetheriteCommand(this)
 
 
         Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply { displaySlot = DisplaySlot.PLAYER_LIST } ?: Bukkit.getScoreboardManager().mainScoreboard.registerNewObjective("netheritewars:netherite_player", Criteria.DUMMY, Component.empty()).apply { displaySlot = DisplaySlot.PLAYER_LIST }

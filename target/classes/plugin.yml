@@ -20,7 +20,6 @@ commands:
     default: true
     aliases:
       - keinfrieden
-
   gift:
     description: Sets a netherite-gift.
     usage: /gift <anzahl> <typ>
@@ -29,3 +28,6 @@ commands:
     description: Battle Royale
     usage: /battleroyale
     default: true
+  addnetherite:
+    description: Add Netherite Blocks to Team
+    usage: /addnetherite <team> <anzahl>

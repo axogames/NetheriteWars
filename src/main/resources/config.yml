@@ -1,5 +1,19 @@
 BORDER_SIZE: 24
 
+VAULT:
+  MINY: 70
+  MAXY: 320
+  BLUE:
+    MINX: 490
+    MAXX: 510
+    MINZ: 490
+    MAXZ: 510
+  RED:
+    MINX: -490
+    MAXX: -510
+    MINZ: -490
+    MAXZ: -510
+
 DATABASE:
   URL: jdbc:mysql://localhost:3306/netheritewars
   USER: root

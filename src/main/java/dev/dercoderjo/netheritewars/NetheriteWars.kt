@@ -1,15 +1,11 @@
 package dev.dercoderjo.netheritewars
 
-import dev.dercoderjo.netheritewars.command.BattleRoyalCommand
-import dev.dercoderjo.netheritewars.command.KillCommand
-import dev.dercoderjo.netheritewars.command.NoPeaceCommand
-import dev.dercoderjo.netheritewars.command.PeaceCommand
+import dev.dercoderjo.netheritewars.command.*
 import dev.dercoderjo.netheritewars.common.BattleRoyal
 import dev.dercoderjo.netheritewars.common.Database
 import dev.dercoderjo.netheritewars.util.checkInventory
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import or.NOahhh_xd.testPlugin.GiftCommand
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.NamespacedKey
@@ -39,6 +35,8 @@ class NetheriteWars : JavaPlugin() {
         this.getCommand("gift")?.setExecutor(GiftCommand(this))
         this.getCommand("battleroyale")?.setExecutor(BattleRoyalCommand(this))
         this.getCommand("battleroyale")?.tabCompleter = BattleRoyalCommand(this)
+        this.getCommand("addnetherite")?.setExecutor(AddNetheriteCommand(this))
+        this.getCommand("addnetherite")?.tabCompleter = AddNetheriteCommand(this)
 
 
         Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply { displaySlot = DisplaySlot.PLAYER_LIST } ?: Bukkit.getScoreboardManager().mainScoreboard.registerNewObjective("netheritewars:netherite_player", Criteria.DUMMY, Component.empty()).apply { displaySlot = DisplaySlot.PLAYER_LIST }

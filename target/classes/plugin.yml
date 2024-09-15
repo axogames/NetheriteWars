@@ -20,3 +20,12 @@ commands:
     default: true
     aliases:
       - keinfrieden
+
+  gift:
+    description: Sets a netherite-gift.
+    usage: /gift <anzahl> <typ>
+    default: true
+  battleroyale:
+    description: Battle Royale
+    usage: /battleroyale
+    default: true

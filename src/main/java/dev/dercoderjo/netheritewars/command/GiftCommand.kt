@@ -1,4 +1,4 @@
-package or.NOahhh_xd.testPlugin
+package dev.dercoderjo.netheritewars.command
 
 import dev.dercoderjo.netheritewars.NetheriteWars
 import net.kyori.adventure.text.Component
@@ -345,137 +345,135 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor {
     )
 
     inner class BlockWithPos(var mat: Material, var relativePos: Vector) {
-        override fun toString(): String {
-            return "new BlockWithPos(Material.$mat,new Vector($relativePos))"
-        }
+override fun toString(): String {
+    return "new BlockWithPos(Material.$mat,new Vector($relativePos))"
+}
     }
 
     override fun onCommand(sender: CommandSender, command: Command, s: String, args: Array<String>): Boolean {
-        if (sender !is Player) return false
+if (sender !is Player) return false
 
-        val p = sender
-        plugin.LOGGER.info(plugin.DATABASE.getPlayer(p.uniqueId.toString()).orga.toString())
-        if (!plugin.DATABASE.getPlayer(p.uniqueId.toString()).orga) {
-            p.sendMessage(Component.text("Das darfst du nicht machen!"))
-            return false
-        }
-        if (args.isEmpty()) {
-            sender.sendMessage(Component.text("/gift <amount_of_netherite_blocks>"))
-            return false
-        }
+val player: Player = sender
+plugin.LOGGER.info(plugin.DATABASE.getPlayer(player.uniqueId.toString()).orga.toString())
+if (!plugin.DATABASE.getPlayer(player.uniqueId.toString()).orga) {
+    player.sendMessage(Component.text("Das darfst du nicht machen!"))
+    return true
+}
+if (args.isEmpty()) {
+    return false
+}
 
-        val num: Int
-        try {
-            num = args[0].toInt()
-        } catch (e: NumberFormatException) {
-            p.sendMessage(Component.text(args[0] + " ist keine wirkliche Zahl"))
-            return false
-        }
+val num: Int
+try {
+    num = args[0].toInt()
+} catch (e: NumberFormatException) {
+    player.sendMessage(Component.text(args[0] + " ist keine wirkliche Zahl"))
+    return true
+}
 
-        if (num > 175) {
-            p.sendMessage(Component.text("Es können maximal 175 NetheriteBlöcke platziert werden. Du wolltest $num platzieren"))
-            return false
-        }
+if (num > 175) {
+    player.sendMessage(Component.text("Es können maximal 175 NetheriteBlöcke platziert werden."))
+    return true
+}
 
-        val pLoc = p.location
-        for (b in chest) {
-            copyLocation(pLoc).add(b.relativePos).block.type = b.mat
-        }
+val pLoc = player.location
+for (b in chest) {
+    copyLocation(pLoc).add(b.relativePos).block.type = b.mat
+}
 
-        if (args.size == 1 || (args.size == 2 && args[1] == "random")) {
-            setNetheriteBlocksRandom(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
-        } else if (args.size == 2) {
-            if (args[1] == "standard")
-                setNetheriteBlocks(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
-            else if (args[1] == "blocks") {
-                setNetheriteBlocksInBlocks(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
-            }
-        }
-
-        return true
+if (args.size == 1 || (args.size == 2 && args[1] == "random")) {
+    setNetheriteBlocksRandom(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
+} else if (args.size == 2) {
+    if (args[1] == "standard")
+setNetheriteBlocks(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
+    else if (args[1] == "blocks") {
+setNetheriteBlocksInBlocks(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
+    }
+}
+return true
     }
 
     private fun setNetheriteBlocksRandom(loc: Location, num: Int) {
-        var blockCount = num
-        val fields = IntArray(25)
-        val rand = Random()
-        while (num > 0) {
-            val i = rand.nextInt(25)
-            val x = i / 5 - 2
-            val z = i % 5 - 2
-            copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble()).block.type =
-                Material.NETHERITE_BLOCK
-            blockCount--
-        }
+var blockCount = num
+val fields = IntArray(25)
+val rand = Random()
+while (num > 0) {
+    val i = rand.nextInt(25)
+    val x = i / 5 - 2
+    val z = i % 5 - 2
+    copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble()).block.type =
+Material.NETHERITE_BLOCK
+    blockCount--
+}
     }
 
     private fun setNetheriteBlocksInBlocks(loc: Location, num: Int) {
-        var blockCount = num - 1
-        val fields = IntArray(25)
-        val rand = Random()
-        val lastPos = rand.nextInt(25)
-        fields[lastPos] = 1
-        while (num > 0) {
-            if (rand.nextInt(10) > 6) {
-                val i = rand.nextInt(4)
-                var x = 0
-                var z = 0
-                when (i) {
-                    0 -> {
-                        if ((lastPos + 1) / 5 == lastPos / 5) {
-                            x = 1
-                        }
-                    }
+var blockCount = num - 1
+val fields = IntArray(25)
+val rand = Random()
+val lastPos = rand.nextInt(25)
+fields[lastPos] = 1
+while (num > 0) {
+    if (rand.nextInt(10) > 6) {
+val i = rand.nextInt(4)
+var x = 0
+var z = 0
+when (i) {
+    0 -> {
+if ((lastPos + 1) / 5 == lastPos / 5) {
+    x = 1
+}
+    }
 
-                    1 -> {
-                        if ((lastPos - 1) / 5 == lastPos / 5) {
-                            x = -1
-                        }
-                    }
+    1 -> {
+if ((lastPos - 1) / 5 == lastPos / 5) {
+    x = -1
+}
+    }
 
-                    2 -> {
-                        if (lastPos + 5 < fields.size) {
-                            z = 1
-                        }
-                    }
+    2 -> {
+if (lastPos + 5 < fields.size) {
+    z = 1
+}
+    }
 
-                    3 -> {
-                        if (lastPos - 5 >= 0) {
-                            z = -1
-                        }
-                    }
-                }
-                copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble()).block.type =
-                    Material.NETHERITE_BLOCK
-            }
-            copyLocation(loc).add(
-                (lastPos / 5 - 2).toDouble(),
-                fields[lastPos]++.toDouble(),
-                (lastPos % 5 - 2).toDouble()
-            ).block.type =
-                Material.NETHERITE_BLOCK
-            blockCount--
-        }
+    3 -> {
+if (lastPos - 5 >= 0) {
+    z = -1
+}
+    }
+}
+copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble()).block.type =
+    Material.NETHERITE_BLOCK
+    }
+    copyLocation(loc).add(
+(lastPos / 5 - 2).toDouble(),
+fields[lastPos]++.toDouble(),
+(lastPos % 5 - 2).toDouble()
+    ).block.type =
+Material.NETHERITE_BLOCK
+    blockCount--
+}
     }
 
     private fun setNetheriteBlocks(pLoc: Location, num: Int) {
-        var blockCount = num
-        val height = blockCount / 25
-        for (j in 0..height) {
-            for (i in -2..2) {
-                for (k in -2..2) {
-                    val loc = copyLocation(pLoc).add(i.toDouble(), j.toDouble(), k.toDouble())
-                    loc.block.type = Material.NETHERITE_BLOCK
-                    blockCount--
-                    if (blockCount <= 0) {
-                        return
-                    }
-                }
-            }
-        }
+var blockCount = num
+val height = blockCount / 25
+for (j in 0..height) {
+    for (i in -2..2) {
+for (k in -2..2) {
+    val loc = copyLocation(pLoc).add(i.toDouble(), j.toDouble(), k.toDouble())
+    loc.block.type = Material.NETHERITE_BLOCK
+    blockCount--
+    if (blockCount <= 0) {
+return
+    }
+}
+    }
+}
     }
 
-    fun copyLocation(loc: Location): Location {
-        return Location(loc.world, loc.x, loc.y, loc.z)
+    private fun copyLocation(loc: Location): Location {
+return Location(loc.world, loc.x, loc.y, loc.z)
     }
 }

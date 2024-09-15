@@ -126,31 +126,8 @@ class Database(plugin: NetheriteWars) {
     }
 }
 
-
-class Player(val uuid: String, var netherite: Int, val deaths: Int, var position: Position, val team: Teams, val whitelisted: Boolean, val orga: Boolean) {
-}
-
-class Team(val team: Teams, var netherite: Int) {
-}
-
-class BattleRoyal(val status: BattleRoyalStatus?, val endsAt: Long?, val pausedAt: Long?) {
-}
-
 enum class Position {
     BLUE,
     RED,
     BORDER
-}
-
-enum class Teams {
-    BLUE,
-    RED,
-    UNSET
-}
-
-enum class BattleRoyalStatus {
-    PREPARED,
-    STARTED,
-    ENDED,
-    PAUSED
 }

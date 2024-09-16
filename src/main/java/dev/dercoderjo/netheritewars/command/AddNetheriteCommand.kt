@@ -3,7 +3,6 @@ package dev.dercoderjo.netheritewars.command
 import dev.dercoderjo.netheritewars.NetheriteWars
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material

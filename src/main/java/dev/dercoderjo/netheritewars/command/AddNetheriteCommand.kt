@@ -2,6 +2,7 @@ package dev.dercoderjo.netheritewars.command
 
 import dev.dercoderjo.netheritewars.NetheriteWars
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -28,7 +29,7 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
         }
         val player: Player = sender
         if (!plugin.DATABASE.getPlayer(player.uniqueId.toString()).orga) {
-            player.sendMessage(Component.text("Das darfst du nicht tun!").color(TextColor.color(255, 0, 0)))
+            player.sendMessage(Component.text("Das darfst du nicht tun!").color(NamedTextColor.RED))
             return true
         }
         if (args == null || args.size != 2) {

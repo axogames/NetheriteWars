@@ -1,6 +1,5 @@
 package dev.dercoderjo.netheritewars.command
 
-import com.sun.org.apache.xpath.internal.operations.Bool
 import dev.dercoderjo.netheritewars.NetheriteWars
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
@@ -13,8 +12,6 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
-import java.sql.Timestamp
-import java.util.Timer
 
 class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompleter {
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>?): MutableList<String> {
@@ -75,7 +72,7 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
             world = Bukkit.getWorld("world")!!
         }
 
-        val findLocation: Location = Location(world, ((minX + maxX)/2).toDouble(), minY.toDouble(), ((minZ + maxZ) / 2).toDouble())
+        val findLocation = Location(world, ((minX + maxX)/2).toDouble(), minY.toDouble(), ((minZ + maxZ) / 2).toDouble())
         while (findLocation.block.type == Material.NETHERITE_BLOCK) {
             findLocation.add(0.0, 1.0, 0.0)
         }
@@ -95,7 +92,6 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
                     return true
                 } else {
                     openList.add(newLocation)
-                    plugin.logger.info("gefunden!")
                 }
             }
             currentLoc = openList.removeAt(0)
@@ -108,7 +104,6 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
                 copyLocation(currentLoc).add(0.0, 1.0, 0.0),
                 copyLocation(currentLoc).add(0.0, -1.0, 0.0),
             )
-            plugin.logger.info(openList.size.toString())
             for (adjacentLoc in adjacentLocs) {
                 if (!closedList.contains(adjacentLoc) && !openList.contains(adjacentLoc) && currentLoc.block.type == Material.NETHERITE_BLOCK && currentLoc.x >= minX && currentLoc.x <= maxX && currentLoc.y >= minY && currentLoc.y <= maxY && currentLoc.z >= minZ && currentLoc.z <= maxZ) {
                     openList.add(adjacentLoc)
@@ -127,7 +122,7 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
     }
 
     private fun findNewBlock(world: World, minX: Int, maxX: Int, minY: Int, maxY: Int, minZ: Int, maxZ: Int): Location? {
-        val findNewLocation: Location = Location(world, ((minX + maxX)/2).toDouble(), minY.toDouble(), ((minZ + maxZ) / 2).toDouble())
+        val findNewLocation = Location(world, ((minX + maxX)/2).toDouble(), minY.toDouble(), ((minZ + maxZ) / 2).toDouble())
         if (findNewLocation.block.type == Material.NETHERITE_BLOCK) {
             while (findNewLocation.block.type == Material.NETHERITE_BLOCK) {
                 findNewLocation.add(0.0, 1.0, 0.0)
@@ -136,11 +131,9 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
         } else {
             val stopSearch: Long = System.nanoTime() + 5000000000
             for (y in minY..maxY) {
-                plugin.logger.warning("Blocke auf Höhe $y werden durchsucht")
                 for (x in minX..maxX) {
                     for (z in minZ..maxZ) {
                         findNewLocation.set(x.toDouble(), y.toDouble(), z.toDouble())
-                        plugin.logger.info("X: " + findNewLocation.x + " | Y: " + findNewLocation.y + " | Z: " + findNewLocation.z)
                         if (findNewLocation.block.type == Material.NETHERITE_BLOCK) {
                             return findNewLocation
                         }

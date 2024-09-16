@@ -62,7 +62,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         }
 
         if (netheriteCount > 16) {
-            var droppingNetheriteCount = netheriteCount
+            val droppingNetheriteCount = netheriteCount
 
             for (item in event.player.inventory.contents) {
                 if (item?.type == Material.NETHERITE_INGOT) {
@@ -210,33 +210,39 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onEntityDamage(event: EntityDamageEvent) {
-        val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
-        val causingEntityLocationZ = event.damageSource.causingEntity?.location?.z ?: (borderSize + 1.0)
-
         if (plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.PREPARED || plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.PAUSED) {
             event.isCancelled = true
             return
         }
 
-        if (event.damageSource.causingEntity is Player) {
-            if ((abs(event.entity.location.z) < borderSize || abs(causingEntityLocationZ) < borderSize || event.entity.world.environment != World.Environment.NORMAL) && event.entity.type == EntityType.PLAYER) {
-                event.isCancelled = true
-
-                (event.damageSource.causingEntity as Player).sendMessage(Component.text("Du kannst Spieler nicht auf der Grenze töten!").color(NamedTextColor.RED))
-            }
-
-            if (event.entity is Player) {
-                if (event.entity.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
-                    event.isCancelled = true
-                }
-            }
-        }
-
-        if (event.entity is Player) {
+        if (event.entity.type ==  EntityType.PLAYER) {
             if ((event.entity as Player).health - event.damage <= 0.0) {
                 (event.entity as Player).gameMode = GameMode.SPECTATOR
                 event.entity.persistentDataContainer.set(NamespacedKey("netheritewars", "respawn_time"), PersistentDataType.LONG, event.entity.world.gameTime + (24000 - event.entity.world.time))
             }
+        }
+    }
+
+    @EventHandler
+    fun onEntityDamageByEntity(event: EntityDamageByEntityEvent) {
+        val entity = event.entity
+        val damager = event.damager
+
+        if (!(entity.type == EntityType.PLAYER && damager.type == EntityType.PLAYER)) {
+            return
+        }
+        val player: Player = entity as Player
+
+        if (event.entity.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
+            event.isCancelled = true
+            return
+        }
+
+        val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
+
+        if ((abs(player.location.z) < borderSize || damager.location.z < borderSize) && entity.world.environment == World.Environment.NORMAL) {
+            event.isCancelled = true
+            (damager as Player).sendMessage(Component.text("Du kannst Spieler nicht auf der Grenze töten!").color(NamedTextColor.RED))
         }
     }
 
@@ -297,7 +303,6 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onCreativeItemClick(event: InventoryCreativeEvent) {
-        val player = event.whoClicked
         val item = event.cursor
 
         when (item.type) {

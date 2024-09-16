@@ -196,12 +196,18 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onPlayerPlaceBlock(event: BlockPlaceEvent) {
-        if (event.itemInHand.type == Material.NETHERITE_BLOCK && event.block.world.getBlockAt(
-                event.block.location.x.toInt(),
-                70,
-                event.block.location.z.toInt()
-            ).type != Material.BEDROCK
-        ) {
+        val x = event.block.location.blockX
+        val y = event.block.location.blockY
+        val z = event.block.location.blockZ
+
+        /*
+        Bedingungen für das Platzieren eines Netheriteblockes:
+            1. platzierter Block ist ein Netheriteblock
+            2. platzierter Block befindet sich auf der richtigen y-Höhe, wie in der Config (VAULT) beschrieben
+            3. platzierter Block befindet sich entweder in der blauen oder roten Schatzkammer,
+               wie in der Config beschrieben (VAULT.BLUE und VAULT.RED)
+        */
+        if (!(event.block.type == Material.NETHERITE_BLOCK && y >= plugin.CONFIG.getInt("VAULT.MINY") && y <= plugin.CONFIG.getInt("VAULT.MAXY") && ((x >= plugin.CONFIG.getInt("VAULT.BLUE.MINX") && x <= plugin.CONFIG.getInt("VAULT.BLUE.MAXX") && z >= plugin.CONFIG.getInt("VAULT.BLUE.MINZ") && z <= plugin.CONFIG.getInt("VAULT.BLUE.MAXZ")) || (x >= plugin.CONFIG.getInt("VAULT.RED.MINX") && x <= plugin.CONFIG.getInt("VAULT.RED.MAXX") && z >= plugin.CONFIG.getInt("VAULT.RED.MINZ") && z <= plugin.CONFIG.getInt("VAULT.RED.MAXZ"))))) {
             event.isCancelled = true
         }
     }

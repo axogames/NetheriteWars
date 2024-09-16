@@ -3,10 +3,7 @@ package dev.dercoderjo.netheritewars
 import com.destroystokyo.paper.event.server.ServerTickEndEvent
 import dev.dercoderjo.netheritewars.common.BattleRoyalStatus
 import dev.dercoderjo.netheritewars.common.Teams
-import dev.dercoderjo.netheritewars.util.checkInventory
-import dev.dercoderjo.netheritewars.util.checkPosition
-import dev.dercoderjo.netheritewars.util.convertTime
-import dev.dercoderjo.netheritewars.util.spawnNetheriteBlockEntity
+import dev.dercoderjo.netheritewars.util.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.*
@@ -21,11 +18,10 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.entity.EntitySpawnEvent
+import org.bukkit.event.inventory.InventoryCreativeEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
-import org.bukkit.event.player.PlayerAttemptPickupItemEvent
-import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerMoveEvent
-import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.player.*
 import org.bukkit.event.world.LootGenerateEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
@@ -246,7 +242,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onBlockBreak(event: BlockBreakEvent) {
-        if (event.block.type == Material.NETHERITE_BLOCK) {
+        if (event.block.type == Material.NETHERITE_BLOCK && event.player.gameMode == GameMode.SURVIVAL) {
             event.isDropItems = false
             spawnNetheriteBlockEntity(event.block.location.add(0.5, 0.5, 0.5))
 
@@ -295,6 +291,51 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             val mat = item.itemStack.type
             if (mat == Material.NETHERITE_INGOT || mat == Material.NETHERITE_BLOCK || mat == Material.NETHERITE_SCRAP) {
                 e.isCancelled = true
+            }
+        }
+    }
+
+    @EventHandler
+    fun onCreativeItemClick(event: InventoryCreativeEvent) {
+        val player = event.whoClicked
+        val item = event.cursor
+
+        when (item.type) {
+            Material.NETHERITE_INGOT -> event.cursor = getNetheriteItem(item.amount)
+            Material.NETHERITE_BLOCK -> event.cursor = getNetheriteBlock(item.amount)
+            else -> {}
+        }
+    }
+
+    @EventHandler
+    fun onPlayerCommand(event: PlayerCommandPreprocessEvent) {
+        val player = event.player
+        val command = event.message
+
+        if (command.startsWith("/give")) {
+            Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                player.inventory.contents.forEachIndexed { index, item ->
+                    if (item != null && item.type != Material.AIR) {
+                        when (item.type) {
+                            Material.NETHERITE_INGOT -> player.inventory.setItem(index, getNetheriteItem(item.amount))
+                            Material.NETHERITE_BLOCK -> player.inventory.setItem(index, getNetheriteBlock(item.amount))
+                            else -> {}
+                        }
+                    }
+                }
+            }, 1L)
+        }
+    }
+
+    @EventHandler
+    fun onEntitySpawn(event: EntitySpawnEvent) {
+        val entity = event.entity
+        val entityType = entity.type
+
+        if (entityType == EntityType.ITEM) {
+            when ((entity as Item).itemStack.type) {
+                Material.NETHERITE_INGOT, Material.NETHERITE_BLOCK -> entity.isGlowing = true
+                else -> {}
             }
         }
     }

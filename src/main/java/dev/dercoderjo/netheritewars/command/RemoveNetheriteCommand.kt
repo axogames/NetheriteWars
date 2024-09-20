@@ -88,7 +88,12 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
             if (openList.isEmpty()) {
                 val newLocation: Location ?= findNewBlock(world, minX, maxX, minY, maxY, minZ, maxZ)
                 if (newLocation == null) {
-                    player.sendMessage("Es konnten $blockCount NetheriteBlöcke nicht entfernt werden.")
+                    if (blockCount > 1) {
+                        player.sendMessage("Es konnten $blockCount NetheriteBlöcke nicht entfernt werden.")
+                    } else {
+                        player.sendMessage("Es konnte 1 Netheriteblock nicht entfernt werden")
+                    }
+
                     return true
                 } else {
                     openList.add(newLocation)

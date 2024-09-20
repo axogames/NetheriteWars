@@ -4,11 +4,15 @@ import dev.dercoderjo.netheritewars.command.*
 import dev.dercoderjo.netheritewars.common.BattleRoyal
 import dev.dercoderjo.netheritewars.common.Database
 import dev.dercoderjo.netheritewars.util.checkInventory
+import dev.dercoderjo.netheritewars.util.getNetheriteBlock
+import dev.dercoderjo.netheritewars.util.getNetheriteItem
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.NamespacedKey
+import org.bukkit.inventory.ShapedRecipe
+import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
@@ -27,7 +31,15 @@ class NetheriteWars : JavaPlugin() {
 
         saveDefaultConfig()
 
-        Bukkit.removeRecipe(NamespacedKey("minecraft", "netherite_ingot"))
+        Bukkit.removeRecipe(NamespacedKey.minecraft("netherite_ingot"))
+        Bukkit.removeRecipe(NamespacedKey.minecraft("netherite_ingot_from_netherite_block"))
+        Bukkit.removeRecipe(NamespacedKey.minecraft("netherite_block"))
+
+        Bukkit.addRecipe(ShapelessRecipe(NamespacedKey(this, "netherite_ingot"), getNetheriteItem(9)).addIngredient(
+            getNetheriteBlock(1)))
+        Bukkit.addRecipe(ShapedRecipe(NamespacedKey(this, "netherite_block"), getNetheriteBlock(1)).shape("NNN","NNN","NNN").setIngredient('N', getNetheriteItem(9)))
+
+        Bukkit.updateRecipes()
 
         this.getCommand("kill")?.setExecutor(KillCommand())
         this.getCommand("peace")?.setExecutor(PeaceCommand(this))

@@ -203,7 +203,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             3. platzierter Block befindet sich entweder in der blauen oder roten Schatzkammer,
                wie in der Config beschrieben (VAULT.BLUE und VAULT.RED)
         */
-        if (!(event.block.type == Material.NETHERITE_BLOCK && y >= plugin.CONFIG.getInt("VAULT.MINY") && y <= plugin.CONFIG.getInt("VAULT.MAXY") && ((x >= plugin.CONFIG.getInt("VAULT.BLUE.MINX") && x <= plugin.CONFIG.getInt("VAULT.BLUE.MAXX") && z >= plugin.CONFIG.getInt("VAULT.BLUE.MINZ") && z <= plugin.CONFIG.getInt("VAULT.BLUE.MAXZ")) || (x >= plugin.CONFIG.getInt("VAULT.RED.MINX") && x <= plugin.CONFIG.getInt("VAULT.RED.MAXX") && z >= plugin.CONFIG.getInt("VAULT.RED.MINZ") && z <= plugin.CONFIG.getInt("VAULT.RED.MAXZ"))))) {
+        if (event.block.type == Material.NETHERITE_BLOCK && !(y >= plugin.CONFIG.getInt("VAULT.MINY") && y <= plugin.CONFIG.getInt("VAULT.MAXY") && ((x >= plugin.CONFIG.getInt("VAULT.BLUE.MINX") && x <= plugin.CONFIG.getInt("VAULT.BLUE.MAXX") && z >= plugin.CONFIG.getInt("VAULT.BLUE.MINZ") && z <= plugin.CONFIG.getInt("VAULT.BLUE.MAXZ")) || (x >= plugin.CONFIG.getInt("VAULT.RED.MINX") && x <= plugin.CONFIG.getInt("VAULT.RED.MAXX") && z >= plugin.CONFIG.getInt("VAULT.RED.MINZ") && z <= plugin.CONFIG.getInt("VAULT.RED.MAXZ"))))) {
             event.isCancelled = true
         }
     }

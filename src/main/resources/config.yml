@@ -16,5 +16,5 @@ VAULT:
 
 DATABASE:
   URL: jdbc:mysql://localhost:3306/netheritewars
-  USER: jdbc_user
+  USER: root
   PASSWORD: 9sjxq#CxJUMj8hu3Nfv576c$D*^NjLvjak5wUYU3gBuowFHsi4rCGC@49YdDhkueyndtcbKa5pAzERzUSwGpF*oqRimhZXtyf$2X@zeWjPA2ex9$#$yJ%aJ4TVeQJdwW

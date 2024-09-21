@@ -1,8 +1,11 @@
 package dev.dercoderjo.netheritewars.command
 
 import dev.dercoderjo.netheritewars.NetheriteWars
+import dev.dercoderjo.netheritewars.common.message_commandUsageSyntax
+import dev.dercoderjo.netheritewars.common.message_notAPlayer
+import dev.dercoderjo.netheritewars.common.message_notEnoughPermissions
+import dev.dercoderjo.netheritewars.common.sendMessage
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -23,17 +26,18 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
 
     override fun onCommand(sender: CommandSender, command: Command, alias: String, args: Array<out String>?): Boolean {
         if (sender !is Player) {
-            sender.sendMessage("Nur Spieler können diesen Command ausführen!")
+            message_notAPlayer(sender)
             return true
         }
         val player: Player = sender
         if (!plugin.DATABASE.getPlayer(player.uniqueId.toString()).orga) {
-            player.sendMessage(Component.text("Das darfst du nicht tun!").color(NamedTextColor.RED))
+            message_notEnoughPermissions(player)
             return true
         }
         if (args == null || args.size != 2) {
-            player.sendMessage("Du musst genau zwei Argumente angeben")
-            return false
+            sendMessage(player, Component.text("Du musst genau zwei Argumente angeben"))
+            message_commandUsageSyntax(sender, alias)
+            return true
         }
 
         val minX: Int
@@ -51,7 +55,8 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
             minZ = plugin.CONFIG.getInt("VAULT.RED.MINZ")
             maxZ = plugin.CONFIG.getInt("VAULT.RED.MAXZ")
         } else {
-            player.sendMessage("Du musst ein gültiges Team angeben! (Blau oder Rot)")
+            sendMessage(sender, Component.text("Du musst ein gültiges Team angeben"))
+            message_commandUsageSyntax(sender, alias)
             return true
         }
         val minY: Int = plugin.CONFIG.getInt("VAULT.MINY")
@@ -61,15 +66,20 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
         try {
             blockCount = args[1].toInt()
         } catch (exception: Exception) {
-            player.sendMessage(args[1] + " ist keine gültige Zahl!")
+            sendMessage(sender, Component.text("${args[1]} ist keine Zahl"))
+            message_commandUsageSyntax(sender, alias)
+            return true
+        }
+        if (blockCount < 1) {
+            sendMessage(sender, Component.text("Die Blockanzahl muss größer als 0 sein"))
+            message_commandUsageSyntax(sender, alias)
             return true
         }
 
-        val world: World
-        if (Bukkit.getWorld("world") == null) {
-            world = Bukkit.getWorlds()[0]
+        val world: World = if (Bukkit.getWorld("world") == null) {
+            Bukkit.getWorlds()[0]
         } else {
-            world = Bukkit.getWorld("world")!!
+            Bukkit.getWorld("world")!!
         }
 
         val closedList: ArrayList<Location> = ArrayList()

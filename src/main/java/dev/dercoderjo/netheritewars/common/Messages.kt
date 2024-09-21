@@ -33,6 +33,7 @@ fun message_notAPlayer(sender: CommandSender) {
 fun message_commandUsageSyntax(sender: CommandSender, commandAlias: String) {
     sendMessage(sender, "Die CommandSyntax lautet: " + when (commandAlias) {
         "addnetherite" -> "/addnetherite <Blau | Rot> <Anzahl (>0)>"
+        "battleroyale" -> "/battleroyale <prepare | start | pause | unpause | addtime <Zeit><s | m | h> | end>"
         else -> "Unbekannter alias -> $commandAlias"
     })
 }

@@ -1,9 +1,7 @@
 package dev.dercoderjo.netheritewars.command
 
 import dev.dercoderjo.netheritewars.NetheriteWars
-import dev.dercoderjo.netheritewars.common.BattleRoyal
-import dev.dercoderjo.netheritewars.common.BattleRoyalStatus
-import net.kyori.adventure.text.Component
+import dev.dercoderjo.netheritewars.common.*
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
@@ -26,41 +24,41 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
         }
     }
 
-    override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+    override fun onCommand(sender: CommandSender, command: Command, alias: String, args: Array<out String>): Boolean {
         val battleRoyal = plugin.DATABASE.getBattleRoyal()
         val currentStatus = battleRoyal.status
 
-        return if (args[0] == "prepare" && currentStatus != BattleRoyalStatus.PREPARED) {
+        if (args[0] == "prepare" && currentStatus != BattleRoyalStatus.PREPARED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.PREPARED, null, null))
-            sender.sendMessage("Battle Royal prepared")
+            announceMessage("Das BattleRoyale befindet sich nun in Vorbereitung")
 
             Bukkit.getWorld("world")?.worldBorder?.setSize(48.0, 0)
             for (player in Bukkit.getOnlinePlayers()) {
                 player.teleport(Location(player.world, 0.0, 100.0, 0.0))
                 if (player.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
                     player.persistentDataContainer.remove(NamespacedKey("netheritewars", "peace"))
-                    player.sendMessage(Component.text("Du bist nun im Kriegsmodus."))
+                    sendMessage(player, "Da bald das BattleRoyale bald startet, wurdest du automatisch in den Kriegsmodus versetzt.")
                 }
             }
-            true
+            return true
         } else if (args[0] == "start" && currentStatus == BattleRoyalStatus.PREPARED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.STARTED, System.currentTimeMillis() + 360000000, null))
-            sender.sendMessage("Battle Royal started")
+            announceMessage("Das Battleroyale ist gestartet")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
-            true
+            return true
         } else if (args[0] == "pause" && currentStatus == BattleRoyalStatus.STARTED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.PAUSED, battleRoyal.endsAt, System.currentTimeMillis()))
-            sender.sendMessage("Battle Royal paused")
+            announceMessage("Das BattleRoyale wurde pausiert")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
-            true
+            return true
         } else if (args[0] == "unpause" && currentStatus == BattleRoyalStatus.PAUSED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.STARTED, System.currentTimeMillis() + (battleRoyal.endsAt!! - battleRoyal.pausedAt!!), null))
-            sender.sendMessage("Battle Royal unpaused")
+            announceMessage("Das BattleRoyale wird fortgesetzt")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
-            true
+            return true
         } else if (args[0] == "addtime" && currentStatus == BattleRoyalStatus.STARTED) {
             val time = args[1].substring(0, args[1].length - 1).toLong()
             val newTime = when (args[1].substring(args[1].length - 1)) {
@@ -70,18 +68,19 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
                 else -> time
             }
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.STARTED, battleRoyal.endsAt!! + newTime, battleRoyal.pausedAt))
-            sender.sendMessage("Time added")
+            announceMessage("Das BattleRoyale wurde um $time${args[1].substring(args[1].length - 1)} verlängert")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
-            true
+            return true
         } else if (args[0] == "end" && currentStatus != BattleRoyalStatus.ENDED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.ENDED, battleRoyal.endsAt, null))
-            sender.sendMessage("Battle Royal ended")
+            announceMessage("Das BattleRoyale ist nun zu Ende")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
-            true
-        } else {
-            false
+            return true
         }
+
+        message_commandUsageSyntax(sender, alias)
+        return true
     }
 }

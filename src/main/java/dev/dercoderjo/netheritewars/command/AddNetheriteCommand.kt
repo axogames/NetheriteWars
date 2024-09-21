@@ -5,7 +5,6 @@ import dev.dercoderjo.netheritewars.common.message_commandUsageSyntax
 import dev.dercoderjo.netheritewars.common.message_notAPlayer
 import dev.dercoderjo.netheritewars.common.message_notEnoughPermissions
 import dev.dercoderjo.netheritewars.common.sendMessage
-import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -35,7 +34,7 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
             return true
         }
         if (args == null || args.size != 2) {
-            sendMessage(player, Component.text("Du musst genau zwei Argumente angeben"))
+            sendMessage(player, "Du musst genau zwei Argumente angeben")
             message_commandUsageSyntax(sender, alias)
             return true
         }
@@ -55,7 +54,7 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
             minZ = plugin.CONFIG.getInt("VAULT.RED.MINZ")
             maxZ = plugin.CONFIG.getInt("VAULT.RED.MAXZ")
         } else {
-            sendMessage(sender, Component.text("Du musst ein gültiges Team angeben"))
+            sendMessage(sender, "Du musst ein gültiges Team angeben")
             message_commandUsageSyntax(sender, alias)
             return true
         }
@@ -66,12 +65,12 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
         try {
             blockCount = args[1].toInt()
         } catch (exception: Exception) {
-            sendMessage(sender, Component.text("${args[1]} ist keine Zahl"))
+            sendMessage(sender, "${args[1]} ist keine Zahl")
             message_commandUsageSyntax(sender, alias)
             return true
         }
         if (blockCount < 1) {
-            sendMessage(sender, Component.text("Die Blockanzahl muss größer als 0 sein"))
+            sendMessage(sender, "Die Blockanzahl muss größer als 0 sein")
             message_commandUsageSyntax(sender, alias)
             return true
         }

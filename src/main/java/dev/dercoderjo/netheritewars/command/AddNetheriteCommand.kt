@@ -16,14 +16,14 @@ import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 
 class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompleter {
-    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>?): MutableList<String> {
-        if (args != null && args.size == 1) {
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): MutableList<String> {
+        if (args.size == 1) {
             return mutableListOf("Blau","Rot")
         }
         return mutableListOf()
     }
 
-    override fun onCommand(sender: CommandSender, command: Command, alias: String, args: Array<out String>?): Boolean {
+    override fun onCommand(sender: CommandSender, command: Command, alias: String, args: Array<out String>): Boolean {
         if (sender !is Player) {
             message_notAPlayer(sender)
             return true
@@ -33,9 +33,9 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
             message_notEnoughPermissions(player)
             return true
         }
-        if (args == null || args.size != 2) {
-            sendMessage(player, "Du musst genau zwei Argumente angeben")
-            message_commandUsageSyntax(sender, alias)
+
+        if (args.size != 2) {
+            message_commandUsageSyntax(player, alias, "Du musst genau zwei Argumente angeben")
             return true
         }
 
@@ -54,8 +54,7 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
             minZ = plugin.CONFIG.getInt("VAULT.RED.MINZ")
             maxZ = plugin.CONFIG.getInt("VAULT.RED.MAXZ")
         } else {
-            sendMessage(sender, "Du musst ein gültiges Team angeben")
-            message_commandUsageSyntax(sender, alias)
+            message_commandUsageSyntax(sender, alias, "Du musst ein gültiges Team angeben")
             return true
         }
         val minY: Int = plugin.CONFIG.getInt("VAULT.MINY")
@@ -70,8 +69,7 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
             return true
         }
         if (blockCount < 1) {
-            sendMessage(sender, "Die Blockanzahl muss größer als 0 sein")
-            message_commandUsageSyntax(sender, alias)
+            message_commandUsageSyntax(sender, alias, "Die Blockanzahl muss größer als 0 sein")
             return true
         }
 

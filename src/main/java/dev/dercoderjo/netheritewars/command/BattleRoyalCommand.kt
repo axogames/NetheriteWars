@@ -48,25 +48,25 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
                 p.teleport(Location(p.world, 0.0, 100.0, 0.0))
                 if (p.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
                     p.persistentDataContainer.remove(NamespacedKey("netheritewars", "peace"))
-                    sendMessage(p, "Da bald das BattleRoyale bald startet, wurdest du automatisch in den Kriegsmodus versetzt.")
+                    sendMessage(p, "Da bald das Battle Royale bald startet, wurdest du automatisch in den Kriegsmodus versetzt.")
                 }
             }
             return true
         } else if (args[0] == "start" && currentStatus == BattleRoyalStatus.PREPARED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.STARTED, System.currentTimeMillis() + 360000000, null))
-            announceMessage("Das Battleroyale ist gestartet")
+            announceMessage("Das Battle Royale ist gestartet")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
             return true
         } else if (args[0] == "pause" && currentStatus == BattleRoyalStatus.STARTED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.PAUSED, battleRoyal.endsAt, System.currentTimeMillis()))
-            announceMessage("Das BattleRoyale wurde pausiert")
+            announceMessage("Das Battle Royale wurde pausiert")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
             return true
         } else if (args[0] == "unpause" && currentStatus == BattleRoyalStatus.PAUSED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.STARTED, System.currentTimeMillis() + (battleRoyal.endsAt!! - battleRoyal.pausedAt!!), null))
-            announceMessage("Das BattleRoyale wird fortgesetzt")
+            announceMessage("Das Battle Royale wird fortgesetzt")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
             return true
@@ -79,19 +79,19 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
                 else -> time
             }
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.STARTED, battleRoyal.endsAt!! + newTime, battleRoyal.pausedAt))
-            announceMessage("Das BattleRoyale wurde um $time${args[1].substring(args[1].length - 1)} verlängert")
+            announceMessage("Das Battle Royale wurde um $time${args[1].substring(args[1].length - 1)} verlängert")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
             return true
         } else if (args[0] == "end" && currentStatus != BattleRoyalStatus.ENDED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.ENDED, battleRoyal.endsAt, null))
-            announceMessage("Das BattleRoyale ist nun zu Ende")
+            announceMessage("Das Battle Royale ist nun zu Ende")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
             return true
         }
 
-        message_commandUsageSyntax(player, alias)
+        message_commandUsageSyntax(player, alias, "${args[0]} ist keine gültige Aktion für das derzeitige Battle Royale")
         return true
     }
 }

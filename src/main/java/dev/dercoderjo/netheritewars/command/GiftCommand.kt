@@ -1,7 +1,9 @@
 package dev.dercoderjo.netheritewars.command
 
 import dev.dercoderjo.netheritewars.NetheriteWars
-import net.kyori.adventure.text.Component
+import dev.dercoderjo.netheritewars.common.message_commandUsageSyntax
+import dev.dercoderjo.netheritewars.common.message_notAPlayer
+import dev.dercoderjo.netheritewars.common.message_notEnoughPermissions
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.command.Command
@@ -351,29 +353,36 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompl
         }
     }
 
-    override fun onCommand(sender: CommandSender, command: Command, s: String, args: Array<String>): Boolean {
-        if (sender !is Player) return false
-
-        val player: Player = sender
-        plugin.LOGGER.info(plugin.DATABASE.getPlayer(player.uniqueId.toString()).orga.toString())
-        if (!plugin.DATABASE.getPlayer(player.uniqueId.toString()).orga) {
-            player.sendMessage(Component.text("Das darfst du nicht machen!"))
+    override fun onCommand(sender: CommandSender, command: Command, alias: String, args: Array<String>): Boolean {
+        if (sender !is Player) {
+            message_notAPlayer(sender)
             return true
         }
+        val player: Player = sender
+        if (!plugin.DATABASE.getPlayer(player.uniqueId.toString()).orga) {
+            message_notEnoughPermissions(player)
+            return true
+        }
+
         if (args.isEmpty()) {
-            return false
+            message_commandUsageSyntax(sender, alias)
+            return true
         }
 
         val num: Int
         try {
             num = args[0].toInt()
         } catch (e: NumberFormatException) {
-            player.sendMessage(Component.text(args[0] + " ist keine wirkliche Zahl"))
+            message_commandUsageSyntax(player, alias, "${args[0]} ist keine Zahl")
             return true
         }
 
+        if (num < 1) {
+            message_commandUsageSyntax(player, alias, "Es kann nicht weniger als ein Netheriteblock verschenkt werden")
+        }
+
         if (num > 175) {
-            player.sendMessage(Component.text("Es können maximal 175 NetheriteBlöcke platziert werden."))
+            message_commandUsageSyntax(player, alias, "Es können maximal 175 NetheriteBlöcke platziert werden")
             return true
         }
 
@@ -382,13 +391,14 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompl
             copyLocation(pLoc).add(b.relativePos).block.type = b.mat
         }
 
-        if (args.size == 1 || (args.size == 2 && args[1] == "random")) {
+        if (args.size == 1 || args[1] == "random") {
             setNetheriteBlocksRandom(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
-        } else if (args.size == 2) {
-            if (args[1] == "standard") setNetheriteBlocks(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
-            else if (args[1] == "blocks") {
+        } else if (args[1] == "standard") {
+            setNetheriteBlocks(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
+        } else if (args[1] == "blocks") {
                 setNetheriteBlocksInBlocks(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
-            }
+        } else {
+            message_commandUsageSyntax(player, alias)
         }
         return true
     }
@@ -397,13 +407,15 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompl
         var blockCount = num
         val fields = IntArray(25)
         val rand = Random()
-        while (num > 0) {
+        while (blockCount > 0) {
             val i = rand.nextInt(25)
             val x = i / 5 - 2
             val z = i % 5 - 2
-            copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble()).block.type =
-                Material.NETHERITE_BLOCK
-            blockCount--
+            val location = copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble())
+            if (location.block.type == Material.AIR) {
+                location.block.type = Material.NETHERITE_BLOCK
+                blockCount--
+            }
         }
     }
 

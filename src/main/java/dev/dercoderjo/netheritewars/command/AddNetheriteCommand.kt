@@ -94,7 +94,7 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
                     openList.add(adjacentLoc)
                 }
             }
-            if (currentLoc.block.type != Material.NETHERITE_BLOCK && currentLoc.x >= minX && currentLoc.x <= maxX && currentLoc.y >= minY && currentLoc.y <= maxY && currentLoc.z >= minZ && currentLoc.z <= maxZ) {
+            if (currentLoc.block.type == Material.AIR && currentLoc.x >= minX && currentLoc.x <= maxX && currentLoc.y >= minY && currentLoc.y <= maxY && currentLoc.z >= minZ && currentLoc.z <= maxZ) {
                 currentLoc.block.type = Material.NETHERITE_BLOCK
                 blockCount--
             }

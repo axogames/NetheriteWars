@@ -1,6 +1,7 @@
 package dev.dercoderjo.netheritewars.command
 
-import net.kyori.adventure.text.Component
+import dev.dercoderjo.netheritewars.common.message_notAPlayer
+import dev.dercoderjo.netheritewars.common.sendMessage
 import org.bukkit.NamespacedKey
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -11,16 +12,16 @@ import org.bukkit.persistence.PersistentDataType
 class NoPeaceCommand : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if (sender !is Player) {
-            sender.sendMessage("You must be a player to use this command.")
-            return false
+            message_notAPlayer(sender)
+            return true
         }
 
         if (sender.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == false) {
-            sender.sendMessage(Component.text("Du bist bereits im Kriegsmodus."))
-            return false
+            sendMessage(sender, "Du bist bereits im Kriegsmodus.")
+            return true
         } else {
             sender.persistentDataContainer.remove(NamespacedKey("netheritewars", "peace"))
-            sender.sendMessage(Component.text("Du bist nun im Kriegsmodus."))
+            sendMessage(sender, "Du bist nun im Kriegsmodus.")
             return true
         }
     }

@@ -9,6 +9,7 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
+import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataType
 
 class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, TabExecutor {
@@ -25,6 +26,16 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
     }
 
     override fun onCommand(sender: CommandSender, command: Command, alias: String, args: Array<out String>): Boolean {
+        if (sender !is Player) {
+            message_notAPlayer(sender)
+            return true
+        }
+        val player: Player = sender
+        if (!plugin.DATABASE.getPlayer(player.uniqueId.toString()).orga) {
+            message_notEnoughPermissions(player)
+            return true
+        }
+
         val battleRoyal = plugin.DATABASE.getBattleRoyal()
         val currentStatus = battleRoyal.status
 
@@ -33,11 +44,11 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
             announceMessage("Das BattleRoyale befindet sich nun in Vorbereitung")
 
             Bukkit.getWorld("world")?.worldBorder?.setSize(48.0, 0)
-            for (player in Bukkit.getOnlinePlayers()) {
-                player.teleport(Location(player.world, 0.0, 100.0, 0.0))
-                if (player.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
-                    player.persistentDataContainer.remove(NamespacedKey("netheritewars", "peace"))
-                    sendMessage(player, "Da bald das BattleRoyale bald startet, wurdest du automatisch in den Kriegsmodus versetzt.")
+            for (p in Bukkit.getOnlinePlayers()) {
+                p.teleport(Location(p.world, 0.0, 100.0, 0.0))
+                if (p.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
+                    p.persistentDataContainer.remove(NamespacedKey("netheritewars", "peace"))
+                    sendMessage(p, "Da bald das BattleRoyale bald startet, wurdest du automatisch in den Kriegsmodus versetzt.")
                 }
             }
             return true
@@ -80,7 +91,7 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
             return true
         }
 
-        message_commandUsageSyntax(sender, alias)
+        message_commandUsageSyntax(player, alias)
         return true
     }
 }

@@ -39,8 +39,6 @@ class NetheriteWars : JavaPlugin() {
             getNetheriteBlock(1)))
         Bukkit.addRecipe(ShapedRecipe(NamespacedKey(this, "netherite_block"), getNetheriteBlock(1)).shape("NNN","NNN","NNN").setIngredient('N', getNetheriteItem(9)))
 
-        Bukkit.updateRecipes()
-
         this.getCommand("kill")?.setExecutor(KillCommand())
         this.getCommand("peace")?.setExecutor(PeaceCommand(this))
         this.getCommand("nopeace")?.setExecutor(NoPeaceCommand())

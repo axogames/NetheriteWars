@@ -7,11 +7,12 @@ import org.bukkit.Material
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
+import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 import org.bukkit.util.Vector
 import java.util.*
 
-class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor {
+class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompleter {
     private val chest: Array<BlockWithPos> = arrayOf(
         BlockWithPos(Material.RED_WOOL, Vector(-4.0, 6.0, -3.0)),
         BlockWithPos(Material.RED_WOOL, Vector(-4.0, 6.0, -2.0)),
@@ -471,5 +472,13 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor {
 
     private fun copyLocation(loc: Location): Location {
         return Location(loc.world, loc.x, loc.y, loc.z)
+    }
+
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>?, ): MutableList<String> {
+        if (args != null && args.size == 1) {
+            return mutableListOf("standard", "blocks", "random")
+        }
+
+        return mutableListOf()
     }
 }

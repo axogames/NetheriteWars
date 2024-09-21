@@ -32,8 +32,18 @@ fun message_notAPlayer(sender: CommandSender) {
 
 fun message_commandUsageSyntax(sender: CommandSender, commandAlias: String) {
     sendMessage(sender, "Die CommandSyntax lautet: " + when (commandAlias) {
-        "addnetherite" -> "/addnetherite <Blau | Rot> <Anzahl (>0)>"
-        "battleroyale" -> "/battleroyale <prepare | start | pause | unpause | addtime <Zeit><s | m | h> | end>"
+        "addnetherite" -> "/addnetherite <Blau | Rot> <Zahl >0>"
+        "battleroyale" -> "/battleroyale <prepare | start | pause | unpause | addtime <Zahl><s | m | h> | end>"
+        "gift" -> "/gift <Zahl 1-175> [standard | blocks | random]"
         else -> "Unbekannter alias -> $commandAlias"
     })
+}
+
+fun message_commandUsageSyntax(sender: CommandSender, commandAlias: String, reason: TextComponent) {
+    sendMessage(sender, reason)
+    message_commandUsageSyntax(sender, commandAlias)
+}
+
+fun message_commandUsageSyntax(sender: CommandSender, commandAlias: String, reason: String) {
+    message_commandUsageSyntax(sender, commandAlias, Component.text(reason))
 }

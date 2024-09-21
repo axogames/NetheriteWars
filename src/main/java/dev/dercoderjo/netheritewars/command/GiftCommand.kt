@@ -411,11 +411,8 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompl
             val i = rand.nextInt(25)
             val x = i / 5 - 2
             val z = i % 5 - 2
-            val location = copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble())
-            if (location.block.type == Material.AIR) {
-                location.block.type = Material.NETHERITE_BLOCK
-                blockCount--
-            }
+            copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble()).block.type = Material.NETHERITE_BLOCK
+            blockCount--
         }
     }
 
@@ -458,9 +455,7 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompl
                 copyLocation(loc).add(x.toDouble(), fields[i]++.toDouble(), z.toDouble()).block.type =
                     Material.NETHERITE_BLOCK
             }
-            copyLocation(loc).add(
-                (lastPos / 5 - 2).toDouble(), fields[lastPos]++.toDouble(), (lastPos % 5 - 2).toDouble()
-            ).block.type = Material.NETHERITE_BLOCK
+            copyLocation(loc).add((lastPos / 5 - 2).toDouble(), fields[lastPos]++.toDouble(), (lastPos % 5 - 2).toDouble()).block.type = Material.NETHERITE_BLOCK
             blockCount--
         }
     }
@@ -487,7 +482,7 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompl
     }
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>?, ): MutableList<String> {
-        if (args != null && args.size == 1) {
+        if (args != null && args.size == 2) {
             return mutableListOf("standard", "blocks", "random")
         }
 

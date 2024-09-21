@@ -4,7 +4,6 @@ import dev.dercoderjo.netheritewars.NetheriteWars
 import dev.dercoderjo.netheritewars.common.message_commandUsageSyntax
 import dev.dercoderjo.netheritewars.common.message_notAPlayer
 import dev.dercoderjo.netheritewars.common.message_notEnoughPermissions
-import dev.dercoderjo.netheritewars.common.sendMessage
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -64,8 +63,7 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
         try {
             blockCount = args[1].toInt()
         } catch (exception: Exception) {
-            sendMessage(sender, "${args[1]} ist keine Zahl")
-            message_commandUsageSyntax(sender, alias)
+            message_commandUsageSyntax(sender, alias, "${args[1]} ist keine Zahl")
             return true
         }
         if (blockCount < 1) {

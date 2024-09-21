@@ -35,6 +35,7 @@ fun message_commandUsageSyntax(sender: CommandSender, commandAlias: String) {
         "addnetherite" -> "/addnetherite <Blau | Rot> <Zahl >0>"
         "battleroyale" -> "/battleroyale <prepare | start | pause | unpause | addtime <Zahl><s | m | h> | end>"
         "gift" -> "/gift <Zahl 1-175> [standard | blocks | random]"
+        "removenetherite", "remnetherite" -> "/removenetherite <Blau | Rot> <Zahl >0>"
         else -> "Unbekannter alias -> $commandAlias"
     })
 }

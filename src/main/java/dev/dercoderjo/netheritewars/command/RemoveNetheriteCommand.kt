@@ -1,8 +1,10 @@
 package dev.dercoderjo.netheritewars.command
 
 import dev.dercoderjo.netheritewars.NetheriteWars
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.TextColor
+import dev.dercoderjo.netheritewars.common.message_commandUsageSyntax
+import dev.dercoderjo.netheritewars.common.message_notAPlayer
+import dev.dercoderjo.netheritewars.common.message_notEnoughPermissions
+import dev.dercoderjo.netheritewars.common.sendMessage
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -14,26 +16,27 @@ import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 
 class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompleter {
-    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>?): MutableList<String> {
-        if (args != null && args.size == 1) {
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): MutableList<String> {
+        if (args.size == 1) {
             return mutableListOf("Blau","Rot")
         }
         return mutableListOf()
     }
 
-    override fun onCommand(sender: CommandSender, command: Command, alias: String, args: Array<out String>?): Boolean {
+    override fun onCommand(sender: CommandSender, command: Command, alias: String, args: Array<out String>): Boolean {
         if (sender !is Player) {
-            sender.sendMessage("Nur Spieler können diesen Command ausführen!")
+            message_notAPlayer(sender)
             return true
         }
         val player: Player = sender
         if (!plugin.DATABASE.getPlayer(player.uniqueId.toString()).orga) {
-            player.sendMessage(Component.text("Das darfst du nicht tun!").color(TextColor.color(255, 0, 0)))
+            message_notEnoughPermissions(player)
             return true
         }
-        if (args == null || args.size != 2) {
-            player.sendMessage("Du musst genau zwei Argumente angeben")
-            return false
+
+        if (args.size != 2) {
+            message_commandUsageSyntax(player, alias, "Du musst genau zwei Argumente angeben")
+            return true
         }
 
         val minX: Int
@@ -51,7 +54,7 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
             minZ = plugin.CONFIG.getInt("VAULT.RED.MINZ")
             maxZ = plugin.CONFIG.getInt("VAULT.RED.MAXZ")
         } else {
-            player.sendMessage("Du musst ein gültiges Team angeben! (Blau oder Rot)")
+            message_commandUsageSyntax(sender, alias, "Du musst ein gültiges Team angeben")
             return true
         }
         val minY: Int = plugin.CONFIG.getInt("VAULT.MINY")
@@ -61,15 +64,18 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
         try {
             blockCount = args[1].toInt()
         } catch (exception: Exception) {
-            player.sendMessage(args[1] + " ist keine gültige Zahl!")
+            message_commandUsageSyntax(sender, alias, "${args[1]} ist keine Zahl")
+            return true
+        }
+        if (blockCount < 1) {
+            message_commandUsageSyntax(sender, alias, "Die Blockanzahl muss größer als 0 sein")
             return true
         }
 
-        val world: World
-        if (Bukkit.getWorld("world") == null) {
-            world = Bukkit.getWorlds()[0]
+        val world: World = if (Bukkit.getWorld("world") == null) {
+            Bukkit.getWorlds()[0]
         } else {
-            world = Bukkit.getWorld("world")!!
+            Bukkit.getWorld("world")!!
         }
 
         val findLocation = Location(world, ((minX + maxX)/2).toDouble(), minY.toDouble(), ((minZ + maxZ) / 2).toDouble())
@@ -89,9 +95,9 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
                 val newLocation: Location ?= findNewBlock(world, minX, maxX, minY, maxY, minZ, maxZ)
                 if (newLocation == null) {
                     if (blockCount > 1) {
-                        player.sendMessage("Es konnten $blockCount NetheriteBlöcke nicht entfernt werden.")
+                        sendMessage(player, "Es konnten $blockCount NetheriteBlöcke nicht entfernt werden.")
                     } else {
-                        player.sendMessage("Es konnte 1 Netheriteblock nicht entfernt werden")
+                        sendMessage(player, "Es konnte 1 Netheriteblock nicht entfernt werden")
                     }
 
                     return true

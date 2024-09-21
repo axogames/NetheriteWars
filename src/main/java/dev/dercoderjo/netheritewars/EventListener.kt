@@ -1,11 +1,13 @@
 package dev.dercoderjo.netheritewars
 
 import com.destroystokyo.paper.event.server.ServerTickEndEvent
+import dev.dercoderjo.netheritewars.common.BattleRoyal
 import dev.dercoderjo.netheritewars.common.BattleRoyalStatus
 import dev.dercoderjo.netheritewars.common.Teams
 import dev.dercoderjo.netheritewars.util.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.title.TitlePart
 import org.bukkit.*
 import org.bukkit.block.BlockState
 import org.bukkit.entity.Entity
@@ -169,6 +171,13 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
         if (plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.STARTED || plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.PAUSED) {
             val formatedTime = if (plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.STARTED) {
+                if (plugin.cachedBattleRoyalData?.endsAt!! - System.currentTimeMillis() <= 0) {
+                    plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.ENDED, plugin.cachedBattleRoyalData!!.endsAt, plugin.cachedBattleRoyalData!!.pausedAt))
+                    plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
+
+                    Bukkit.getServer().sendTitlePart(TitlePart.TITLE, Component.text("Battle Royal beendet"))
+                    return
+                }
                 convertTime(plugin.cachedBattleRoyalData?.endsAt!! - System.currentTimeMillis())
             } else {
                 convertTime((plugin.cachedBattleRoyalData?.endsAt!! - plugin.cachedBattleRoyalData?.pausedAt!!) - System.currentTimeMillis())

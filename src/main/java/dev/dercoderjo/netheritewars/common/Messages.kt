@@ -2,6 +2,7 @@ package dev.dercoderjo.netheritewars.common
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
+import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 
 fun sendMessage(sender: CommandSender, text: TextComponent) {
@@ -10,6 +11,16 @@ fun sendMessage(sender: CommandSender, text: TextComponent) {
 
 fun sendMessage(sender: CommandSender, text: String) {
     sendMessage(sender, Component.text(text))
+}
+
+fun announceMessage(text: TextComponent) {
+    for (player in Bukkit.getOnlinePlayers()) {
+        sendMessage(player, text)
+    }
+}
+
+fun announceMessage(text: String) {
+    announceMessage(Component.text(text))
 }
 
 fun message_notEnoughPermissions(sender: CommandSender) {

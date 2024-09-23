@@ -4,6 +4,7 @@ import dev.dercoderjo.netheritewars.NetheriteWars
 import dev.dercoderjo.netheritewars.common.message_commandUsageSyntax
 import dev.dercoderjo.netheritewars.common.message_notAPlayer
 import dev.dercoderjo.netheritewars.common.message_notEnoughPermissions
+import dev.dercoderjo.netheritewars.common.sendMessage
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.command.Command
@@ -399,7 +400,9 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompl
                 setNetheriteBlocksInBlocks(copyLocation(pLoc).add(0.0, 1.0, 0.0), num)
         } else {
             message_commandUsageSyntax(player, alias)
+            return true
         }
+        sendMessage(player, "Es wurde ein Geschenk mit $num NetheriteBlöcken platziert")
         return true
     }
 

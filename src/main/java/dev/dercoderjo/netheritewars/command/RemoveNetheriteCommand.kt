@@ -60,7 +60,7 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
         val minY: Int = plugin.CONFIG.getInt("VAULT.MINY")
         val maxY: Int = plugin.config.getInt("VAULT.MAXY")
 
-        var blockCount: Int
+        val blockCount: Int
         try {
             blockCount = args[1].toInt()
         } catch (exception: Exception) {
@@ -90,16 +90,16 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
         var adjacentLocs: Array<Location>
         openList.add(findLocation)
 
-        while (blockCount > 0) {
+        var count = Integer.valueOf(blockCount)
+        while (count > 0) {
             if (openList.isEmpty()) {
                 val newLocation: Location ?= findNewBlock(world, minX, maxX, minY, maxY, minZ, maxZ)
                 if (newLocation == null) {
-                    if (blockCount > 1) {
-                        sendMessage(player, "Es konnten $blockCount NetheriteBlöcke nicht entfernt werden.")
+                    if (count > 1) {
+                        sendMessage(player, "Es konnten $count NetheriteBlöcke nicht entfernt werden.")
                     } else {
                         sendMessage(player, "Es konnte 1 Netheriteblock nicht entfernt werden")
                     }
-
                     return true
                 } else {
                     openList.add(newLocation)
@@ -122,9 +122,10 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
             }
             if (currentLoc.block.type == Material.NETHERITE_BLOCK) {
                 currentLoc.block.type = Material.AIR
-                blockCount--
+                count--
             }
         }
+        sendMessage(player, "Im VAULT von Team ${args[0]} wurden $blockCount NetheriteBlöcke entfernt")
         return true
     }
 

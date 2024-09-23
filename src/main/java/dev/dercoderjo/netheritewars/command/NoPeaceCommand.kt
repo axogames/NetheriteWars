@@ -18,11 +18,10 @@ class NoPeaceCommand : CommandExecutor {
 
         if (sender.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == false) {
             sendMessage(sender, "Du bist bereits im Kriegsmodus.")
-            return true
         } else {
             sender.persistentDataContainer.remove(NamespacedKey("netheritewars", "peace"))
             sendMessage(sender, "Du bist nun im Kriegsmodus.")
-            return true
         }
+        return true
     }
 }

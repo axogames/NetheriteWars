@@ -4,6 +4,7 @@ import dev.dercoderjo.netheritewars.NetheriteWars
 import dev.dercoderjo.netheritewars.common.message_commandUsageSyntax
 import dev.dercoderjo.netheritewars.common.message_notAPlayer
 import dev.dercoderjo.netheritewars.common.message_notEnoughPermissions
+import dev.dercoderjo.netheritewars.common.sendMessage
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -59,7 +60,7 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
         val minY: Int = plugin.CONFIG.getInt("VAULT.MINY")
         val maxY: Int = plugin.config.getInt("VAULT.MAXY")
 
-        var blockCount: Int
+        val blockCount: Int
         try {
             blockCount = args[1].toInt()
         } catch (exception: Exception) {
@@ -83,7 +84,8 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
         var adjacentLocs: Array<Location>
         openList.add(Location(world, ((minX + maxX)/2).toDouble(), minY.toDouble(), ((minZ + maxZ) / 2).toDouble()))
 
-        while (blockCount > 0) {
+        var count = Integer.valueOf(blockCount)
+        while (count  > 0) {
             currentLoc = openList.removeAt(0)
             closedList.add(currentLoc)
             adjacentLocs = arrayOf(
@@ -101,9 +103,10 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
             }
             if (currentLoc.block.type == Material.AIR && currentLoc.x >= minX && currentLoc.x <= maxX && currentLoc.y >= minY && currentLoc.y <= maxY && currentLoc.z >= minZ && currentLoc.z <= maxZ) {
                 currentLoc.block.type = Material.NETHERITE_BLOCK
-                blockCount--
+                count--
             }
         }
+        sendMessage(player, "Im VAULT von Team ${args[0]} wurden $blockCount NetheriteBlöcke platziert")
         return true
     }
 

@@ -2,14 +2,19 @@ package dev.dercoderjo.netheritewars.command
 
 import dev.dercoderjo.netheritewars.NetheriteWars
 import dev.dercoderjo.netheritewars.common.*
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.title.TitlePart
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.Material
 import org.bukkit.NamespacedKey
+import org.bukkit.block.Chest
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 
 class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, TabExecutor {
@@ -41,6 +46,36 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
 
         if (args[0] == "prepare" && currentStatus != BattleRoyalStatus.PREPARED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.PREPARED, null, null))
+            for (location in listOf(
+                Location(Bukkit.getWorld("world"), 0.0, 80.0, -3.0),
+                Location(Bukkit.getWorld("world"), -2.0, 80.0, -2.0),
+                Location(Bukkit.getWorld("world"), -3.0, 80.0, 0.0),
+                Location(Bukkit.getWorld("world"), 0.0, 80.0, 3.0),
+                Location(Bukkit.getWorld("world"), 2.0, 80.0, 2.0),
+                Location(Bukkit.getWorld("world"), 3.0, 80.0, 0.0),
+                Location(Bukkit.getWorld("world"), 2.0, 80.0, -2.0),
+                Location(Bukkit.getWorld("world"), -2.0, 80.0, 2.0)
+            )) {
+                location.block.type = Material.CHEST
+                (location.block.state as Chest).inventory.apply {
+                    setItem(0, ItemStack(Material.DIAMOND_HELMET))
+                    setItem(1, ItemStack(Material.DIAMOND_CHESTPLATE))
+                    setItem(2, ItemStack(Material.DIAMOND_LEGGINGS))
+                    setItem(3, ItemStack(Material.DIAMOND_BOOTS))
+
+                    setItem(6, ItemStack(Material.DIAMOND_SWORD))
+                    setItem(7, ItemStack(Material.DIAMOND_PICKAXE))
+                    setItem(8, ItemStack(Material.DIAMOND_AXE))
+
+                    setItem(18, ItemStack(Material.BREAD, 64))
+                    setItem(18, ItemStack(Material.BREAD, 64))
+
+                    setItem(23, ItemStack(Material.BOW))
+                    setItem(24, ItemStack(Material.CROSSBOW))
+                    setItem(25, ItemStack(Material.ARROW, 64))
+                    setItem(26, ItemStack(Material.SPECTRAL_ARROW, 64))
+                }
+            }
             announceMessage("Das BattleRoyale befindet sich nun in Vorbereitung")
 
             Bukkit.getWorld("world")?.worldBorder?.setSize(48.0, 0)
@@ -53,7 +88,8 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
             }
             return true
         } else if (args[0] == "start" && currentStatus == BattleRoyalStatus.PREPARED) {
-            plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.STARTED, System.currentTimeMillis() + 360000000, null))
+            plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.STARTED, System.currentTimeMillis() + 3600000, null))
+            Bukkit.getWorld("world")?.worldBorder?.reset()
             announceMessage("Das Battle Royale ist gestartet")
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
@@ -85,7 +121,9 @@ class BattleRoyalCommand(private val plugin: NetheriteWars) : CommandExecutor, T
             return true
         } else if (args[0] == "end" && currentStatus != BattleRoyalStatus.ENDED) {
             plugin.DATABASE.setBattleRoyal(BattleRoyal(BattleRoyalStatus.ENDED, battleRoyal.endsAt, null))
+            Bukkit.getWorld("world")?.worldBorder?.reset()
             announceMessage("Das Battle Royale ist nun zu Ende")
+            Bukkit.getServer().sendTitlePart(TitlePart.TITLE, Component.text("Battle Royal beendet"))
 
             plugin.cachedBattleRoyalData = plugin.DATABASE.getBattleRoyal()
             return true

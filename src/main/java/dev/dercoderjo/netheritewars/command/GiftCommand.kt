@@ -422,7 +422,7 @@ class GiftCommand(private val plugin: NetheriteWars) : CommandExecutor, TabCompl
         val rand = Random()
         val lastPos = rand.nextInt(25)
         fields[lastPos] = 1
-        while (num > 0) {
+        while (blockCount > 0) {
             if (rand.nextInt(10) > 6) {
                 val i = rand.nextInt(4)
                 var x = 0

@@ -81,6 +81,11 @@ class Database(plugin: NetheriteWars) {
         statement.executeUpdate("UPDATE teams SET netherite = ${team.netherite} WHERE color = '${team.team}'")
     }
 
+    fun setDeaths(player: Player) {
+        println(player.deaths)
+        statement.executeUpdate("UPDATE players SET deaths = ${player.deaths} WHERE uuid = '${player.uuid}'")
+    }
+
     fun getBattleRoyal(): BattleRoyal {
         val stmt = connection.prepareStatement("SELECT * FROM battle_royal WHERE status != 'ENDED' ORDER BY ends_at DESC LIMIT 1")
         val resultSet = stmt.executeQuery()

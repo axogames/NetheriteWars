@@ -13,7 +13,7 @@ import kotlin.math.abs
 class Player(
     val uuid: String,
     var netherite: Int,
-    val deaths: Int,
+    var deaths: Int,
     var position: Position,
     val team: Teams,
     val whitelisted: Boolean,
@@ -64,7 +64,7 @@ fun dropNetherite(player: Player, looseAll: Boolean = true) : Int {
         }
         return droppingNetheriteCount
     }
-    return 0
+    return 4
 }
 
 fun checkPositionInBorders(plugin: NetheriteWars, player: Player) {

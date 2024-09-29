@@ -1,11 +1,7 @@
 package dev.dercoderjo.netheritewars
 
 import dev.dercoderjo.netheritewars.command.*
-import dev.dercoderjo.netheritewars.common.BattleRoyal
-import dev.dercoderjo.netheritewars.common.Database
-import dev.dercoderjo.netheritewars.common.checkInventoryForNetherite
-import dev.dercoderjo.netheritewars.util.getNetheriteBlock
-import dev.dercoderjo.netheritewars.util.getNetheriteItem
+import dev.dercoderjo.netheritewars.common.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit

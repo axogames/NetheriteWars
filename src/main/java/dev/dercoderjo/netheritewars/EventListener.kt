@@ -210,9 +210,6 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
                 player.gameMode = GameMode.SPECTATOR
                 player.persistentDataContainer.set(NamespacedKey("netheritewars", "respawn_time"), PersistentDataType.LONG, player.world.gameTime + (24000 - event.entity.world.time))
 
-                val droppingNetheriteCount = dropNetherite(player, true)
-                player.world.dropItem(player.location, getNetheriteItem(droppingNetheriteCount))
-
                 val dbPlayer = plugin.DATABASE.getPlayer(player.uniqueId.toString())
                 dbPlayer.deaths += 1
                 plugin.DATABASE.setDeaths(dbPlayer)

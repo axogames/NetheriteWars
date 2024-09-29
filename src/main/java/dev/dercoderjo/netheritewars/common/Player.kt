@@ -75,10 +75,6 @@ fun checkPositioninBorders(plugin: NetheriteWars, player: Player) {
     val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
     val dbPlayer = plugin.DATABASE.getPlayer(player.uniqueId.toString())
 
-    if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
-        return
-    }
-
     if (dbPlayer.team == Teams.RED) {
         player.scoreboard.getTeam("red")?.addEntry(player.name)
     } else if (dbPlayer.team == Teams.BLUE) {
@@ -102,7 +98,7 @@ fun checkPositioninBorders(plugin: NetheriteWars, player: Player) {
 
         if (dbPlayer.position != Position.BORDER) {
             sendMessage(player, "Du bist nun im Grenzgebiet")
-            player.showBossBar(BossBar.bossBar(borderBossBarName, 1.0f, BossBar.Color.RED, BossBar.Overlay.PROGRESS))
+            player.showBossBar(BossBar.bossBar(borderBossBarName, 1.0f, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS))
             dbPlayer.position = Position.BORDER
             player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
         }
@@ -112,18 +108,16 @@ fun checkPositioninBorders(plugin: NetheriteWars, player: Player) {
         } else {
             1.0f
         }
-        val bossBar = BossBar.bossBar(
-            borderBossBarName,
-            progress,
-            BossBar.Color.YELLOW,
-            BossBar.Overlay.PROGRESS
+        val bossBar = BossBar.bossBar(borderBossBarName, progress, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS
         )
 
         player.showBossBar(bossBar)
     } else if (player.location.z > 0) {
         if (dbPlayer.team == Teams.RED) {
             if (dbPlayer.position != Position.BLUE) {
-                player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+                if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
+                    player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+                }
                 sendMessage(player, "Du bist nun im Feindgebiet")
                 player.showBossBar(BossBar.bossBar(opponentBossBarName, 1.0f, BossBar.Color.RED, BossBar.Overlay.PROGRESS))
                 dbPlayer.position = Position.BLUE
@@ -134,7 +128,9 @@ fun checkPositioninBorders(plugin: NetheriteWars, player: Player) {
                 player.isGliding = false
             }
         } else if (dbPlayer.team == Teams.BLUE && dbPlayer.position != Position.BLUE) {
-            player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+            if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
+                player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+            }
             sendMessage(player, "Du bist nun im Heimatgebiet")
             player.showBossBar(BossBar.bossBar(homeBossBarName, 1.0f, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS))
             dbPlayer.position = Position.BLUE
@@ -143,7 +139,9 @@ fun checkPositioninBorders(plugin: NetheriteWars, player: Player) {
     } else if (player.location.z < 0) {
         if (dbPlayer.team == Teams.BLUE) {
             if (dbPlayer.position != Position.RED) {
-                player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+                if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
+                    player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+                }
                 sendMessage(player, "Du bist nun im Feindgebiet")
                 player.showBossBar(
                     BossBar.bossBar(opponentBossBarName, 1.0f, BossBar.Color.RED, BossBar.Overlay.PROGRESS
@@ -157,7 +155,9 @@ fun checkPositioninBorders(plugin: NetheriteWars, player: Player) {
                 player.isGliding = false
             }
         } else if (dbPlayer.team == Teams.RED && dbPlayer.position != Position.RED) {
-            player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+            if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
+                player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+            }
             sendMessage(player, "Du bist nun im Heimatgebiet")
             player.showBossBar(BossBar.bossBar(homeBossBarName, 1.0f, BossBar.Color.RED, BossBar.Overlay.PROGRESS))
             dbPlayer.position = Position.RED

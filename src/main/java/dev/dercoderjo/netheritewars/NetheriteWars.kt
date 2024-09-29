@@ -10,6 +10,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import org.bukkit.GameRule
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.ShapedRecipe
 import org.bukkit.inventory.ShapelessRecipe
@@ -22,7 +23,6 @@ import org.bukkit.scoreboard.DisplaySlot
 
 class NetheriteWars : JavaPlugin() {
     val CONFIG = config
-    val LOGGER = logger
     val DATABASE = Database(this)
     var cachedBattleRoyalData: BattleRoyal? = null
 
@@ -30,6 +30,10 @@ class NetheriteWars : JavaPlugin() {
         Bukkit.getPluginManager().registerEvents(EventListener(this), this)
 
         saveDefaultConfig()
+
+        for (world in Bukkit.getWorlds()) {
+            world.setGameRule(GameRule.KEEP_INVENTORY, true)
+        }
 
         Bukkit.removeRecipe(NamespacedKey.minecraft("netherite_ingot"))
         Bukkit.removeRecipe(NamespacedKey.minecraft("netherite_ingot_from_netherite_block"))

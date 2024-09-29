@@ -25,7 +25,6 @@ import org.bukkit.event.inventory.InventoryCreativeEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.LootGenerateEvent
-import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import kotlin.math.abs
 import kotlin.math.floor
@@ -87,16 +86,10 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             }
 
             if (netheriteCount < 16) {
-                event.player.inventory.addItem(ItemStack(Material.NETHERITE_INGOT, 16 - netheriteCount))
+                event.player.inventory.addItem(getNetheriteItem(16 - netheriteCount))
             }
 
-            event.player.world.dropItem(event.player.location, ItemStack(Material.NETHERITE_INGOT, droppingNetheriteCount - 16).apply {
-                val meta = itemMeta
-                meta?.setEnchantmentGlintOverride(true)
-                itemMeta = meta
-            }).apply {
-                isCustomNameVisible = true
-                isGlowing = true
+            event.player.world.dropItem(event.player.location, getNetheriteItem(droppingNetheriteCount - 16)).apply {
                 persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 60000)
                 persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_owner"), PersistentDataType.STRING, event.player.uniqueId.toString())
             }
@@ -259,7 +252,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     fun onBlockBreak(event: BlockBreakEvent) {
         if (event.block.type == Material.NETHERITE_BLOCK && event.player.gameMode == GameMode.SURVIVAL) {
             event.isDropItems = false
-            spawnNetheriteBlockEntity(event.block.location.add(0.5, 0.5, 0.5))
+            event.player.world.dropItem(event.block.location, getNetheriteBlock())
 
             val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
 

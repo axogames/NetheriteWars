@@ -67,13 +67,27 @@ fun dropNetherite(player: Player, looseAll: Boolean = true) : Int {
     return 0
 }
 
-val borderBossBarName = Component.text("Grenzgebiet")
-val opponentBossBarName = Component.text("Feindgebiet")
-val homeBossBarName = Component.text("Heimatgebiet")
-
-fun checkPositioninBorders(plugin: NetheriteWars, player: Player) {
+fun checkPositionInBorders(plugin: NetheriteWars, player: Player) {
     val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
     val dbPlayer = plugin.DATABASE.getPlayer(player.uniqueId.toString())
+
+    fun showBorderBossBar(player: Player) {
+        player.showBossBar(BossBar.bossBar(Component.text("Grenzgebiet"), ((borderSize - abs(player.location.z)) / borderSize).toFloat(), BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS))
+    }
+    fun showOpponenntBossBar(player: Player) {
+        var progress = ((abs(player.location.z) - borderSize) / borderSize).toFloat()
+        if (progress > 1) {
+            progress = 1f
+        }
+        player.showBossBar(BossBar.bossBar(Component.text("Feindgebiet"), progress, BossBar.Color.RED, BossBar.Overlay.PROGRESS))
+    }
+    fun showHomeBossBar(player: Player) {
+        var progress = ((abs(player.location.z) - borderSize) / borderSize).toFloat()
+        if (progress > 1) {
+            progress = 1f
+        }
+        player.showBossBar(BossBar.bossBar(Component.text("Heimatgebiet"), progress, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS))
+    }
 
     if (dbPlayer.team == Teams.RED) {
         player.scoreboard.getTeam("red")?.addEntry(player.name)
@@ -81,89 +95,76 @@ fun checkPositioninBorders(plugin: NetheriteWars, player: Player) {
         player.scoreboard.getTeam("blue")?.addEntry(player.name)
     }
 
-    for (bossBar in player.activeBossBars()) {
-        if (bossBar.name() == borderBossBarName) {
-            player.hideBossBar(bossBar)
-        }
+    val bossbars = player.activeBossBars().toList().toList()
+    for (bossbar in bossbars) {
+        player.hideBossBar(bossbar)
     }
 
     if (abs(player.location.z) <= borderSize || player.world.environment != World.Environment.NORMAL) {
-        if ((dbPlayer.team == Teams.RED && dbPlayer.position == Position.BLUE) || (dbPlayer.team == Teams.BLUE && dbPlayer.position == Position.RED)) {
-            for (bossBar in player.activeBossBars()) {
-                if (bossBar.name() == opponentBossBarName) {
-                    player.hideBossBar(bossBar)
-                }
-            }
-        }
-
         if (dbPlayer.position != Position.BORDER) {
             sendMessage(player, "Du bist nun im Grenzgebiet")
-            player.showBossBar(BossBar.bossBar(borderBossBarName, 1.0f, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS))
             dbPlayer.position = Position.BORDER
-            player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
-        }
+            if (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE) {
+                player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+                player.gameMode = GameMode.ADVENTURE
+            }
 
-        val progress = if (player.world.environment == World.Environment.NORMAL) {
-            ((borderSize - abs(player.location.z)) / borderSize).toFloat()
-        } else {
-            1.0f
         }
-        val bossBar = BossBar.bossBar(borderBossBarName, progress, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS
-        )
-
-        player.showBossBar(bossBar)
+        showBorderBossBar(player)
     } else if (player.location.z > 0) {
         if (dbPlayer.team == Teams.RED) {
             if (dbPlayer.position != Position.BLUE) {
-                if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
+                dbPlayer.position = Position.BLUE
+                if (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE) {
                     player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+                    player.gameMode = GameMode.ADVENTURE
                 }
                 sendMessage(player, "Du bist nun im Feindgebiet")
-                player.showBossBar(BossBar.bossBar(opponentBossBarName, 1.0f, BossBar.Color.RED, BossBar.Overlay.PROGRESS))
-                dbPlayer.position = Position.BLUE
-                if (player.gameMode == GameMode.SURVIVAL) player.gameMode = GameMode.ADVENTURE
             }
-
             if (player.isGliding) {
                 player.isGliding = false
             }
-        } else if (dbPlayer.team == Teams.BLUE && dbPlayer.position != Position.BLUE) {
-            if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
-                player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+            showOpponenntBossBar(player)
+        } else if (dbPlayer.team == Teams.BLUE) {
+            if (dbPlayer.position != Position.BLUE) {
+                dbPlayer.position = Position.BLUE
+                if (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE) {
+                    player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+                    player.gameMode = GameMode.SURVIVAL
+                }
+                sendMessage(player, "Du bist nun im Heimatgebiet")
             }
-            sendMessage(player, "Du bist nun im Heimatgebiet")
-            player.showBossBar(BossBar.bossBar(homeBossBarName, 1.0f, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS))
-            dbPlayer.position = Position.BLUE
-            if (player.gameMode == GameMode.ADVENTURE) player.gameMode = GameMode.SURVIVAL
+            showHomeBossBar(player)
         }
+
     } else if (player.location.z < 0) {
         if (dbPlayer.team == Teams.BLUE) {
             if (dbPlayer.position != Position.RED) {
-                if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
+                dbPlayer.position = Position.RED
+                if (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE) {
                     player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+                    player.gameMode = GameMode.ADVENTURE
                 }
                 sendMessage(player, "Du bist nun im Feindgebiet")
-                player.showBossBar(
-                    BossBar.bossBar(opponentBossBarName, 1.0f, BossBar.Color.RED, BossBar.Overlay.PROGRESS
-                )
-                )
-                dbPlayer.position = Position.RED
-                if (player.gameMode == GameMode.SURVIVAL) player.gameMode = GameMode.ADVENTURE
             }
-
+            showOpponenntBossBar(player)
             if (player.isGliding) {
                 player.isGliding = false
             }
         } else if (dbPlayer.team == Teams.RED && dbPlayer.position != Position.RED) {
-            if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
-                player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+            if (dbPlayer.position != Position.RED) {
+                dbPlayer.position = Position.RED
+                sendMessage(player, "Du bist nun im Heimatgebiet")
+                player.gameMode = GameMode.SURVIVAL
+                if (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE) {
+                    player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
+                    player.gameMode = GameMode.SURVIVAL
+                }
             }
             sendMessage(player, "Du bist nun im Heimatgebiet")
-            player.showBossBar(BossBar.bossBar(homeBossBarName, 1.0f, BossBar.Color.RED, BossBar.Overlay.PROGRESS))
-            dbPlayer.position = Position.RED
-            if (player.gameMode == GameMode.ADVENTURE) player.gameMode = GameMode.SURVIVAL
+            player.gameMode = GameMode.SURVIVAL
+            showHomeBossBar(player)
         }
     }
-
     plugin.DATABASE.setPlayer(dbPlayer)
 }

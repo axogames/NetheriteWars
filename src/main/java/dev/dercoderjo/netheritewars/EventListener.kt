@@ -33,7 +33,7 @@ import kotlin.math.floor
 class EventListener(private val plugin: NetheriteWars) : Listener {
     @EventHandler
     fun onPlayerMove(event: PlayerMoveEvent) {
-        checkPositioninBorders(plugin, event.player)
+        checkPositionInBorders(plugin, event.player)
     }
 
     @EventHandler
@@ -47,7 +47,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             )
         }
 
-        checkPositioninBorders(plugin, event.player)
+        checkPositionInBorders(plugin, event.player)
     }
 
     @EventHandler

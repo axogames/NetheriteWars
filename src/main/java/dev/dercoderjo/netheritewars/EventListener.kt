@@ -54,6 +54,10 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     fun onPlayerQuit(event: PlayerQuitEvent) {
         val droppingNetheriteCount = dropNetherite(event.player, false)
 
+        if (droppingNetheriteCount < 16) {
+            return
+        }
+
         event.player.world.dropItem(event.player.location, getNetheriteItem(droppingNetheriteCount - 16)).apply {
             persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 60000)
             persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_owner"), PersistentDataType.STRING, event.player.uniqueId.toString())

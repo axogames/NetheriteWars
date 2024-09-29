@@ -75,6 +75,9 @@ fun checkPositioninBorders(plugin: NetheriteWars, player: Player) {
     val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
     val dbPlayer = plugin.DATABASE.getPlayer(player.uniqueId.toString())
 
+    if (player.gameMode != GameMode.SURVIVAL && player.gameMode != GameMode.ADVENTURE) {
+        return
+    }
 
     if (dbPlayer.team == Teams.RED) {
         player.scoreboard.getTeam("red")?.addEntry(player.name)

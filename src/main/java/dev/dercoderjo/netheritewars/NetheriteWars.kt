@@ -65,24 +65,19 @@ class NetheriteWars : JavaPlugin() {
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, {
             for (player in Bukkit.getOnlinePlayers()) {
-                if (player.gameMode == GameMode.SPECTATOR && (player.location.world?.time ?: continue) <= 20) {
+                if (player.gameMode == GameMode.SPECTATOR && (player.location.world?.time ?: continue) <= 20 && player.persistentDataContainer.has(NamespacedKey("netheritewars", "respawn_time"))) {
                     player.gameMode = GameMode.SURVIVAL
                     player.teleport(player.respawnLocation ?: player.player!!.world.spawnLocation)
                     player.persistentDataContainer.remove(NamespacedKey("netheritewars", "respawn_time"))
                 }
 
-                if (player.persistentDataContainer.get(
-                        NamespacedKey("netheritewars", "peace"),
-                        PersistentDataType.BOOLEAN
-                    ) == true
-                ) {
+                if (player.persistentDataContainer.has(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN)) {
                     player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, 30, 0, false, false, false))
                     player.sendActionBar(Component.text("Friedensmodus aktiviert", NamedTextColor.GREEN))
                 }
 
-                DATABASE.setPlayer(
-                    DATABASE.getPlayer(player.uniqueId.toString()).apply {
-                        netherite = checkInventoryForNetherite(player)
+                DATABASE.setPlayer(DATABASE.getPlayer(player.uniqueId.toString()).apply {
+                    netherite = checkInventoryForNetherite(player)
                     }
                 )
             }

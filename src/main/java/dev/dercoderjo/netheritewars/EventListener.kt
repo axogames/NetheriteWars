@@ -112,6 +112,9 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
                     if (player.getPotionEffect(PotionEffectType.WEAKNESS)?.duration == -1) player.removePotionEffect(PotionEffectType.WEAKNESS)
                     if (slownessStrength > 0) player.addPotionEffect(PotionEffect(PotionEffectType.SLOWNESS, -1, slownessStrength - 1, false, false, true))
                     if (weaknessStrength > 0) player.addPotionEffect(PotionEffect(PotionEffectType.WEAKNESS, -1, weaknessStrength - 1, false, false, true))
+                } else {
+                    player.removePotionEffect(PotionEffectType.WEAKNESS)
+                    player.removePotionEffect(PotionEffectType.SLOWNESS)
                 }
 
                 val inventory = player.openInventory.topInventory

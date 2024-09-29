@@ -2,10 +2,7 @@ package dev.dercoderjo.netheritewars
 
 import com.destroystokyo.paper.event.server.ServerTickEndEvent
 import dev.dercoderjo.netheritewars.common.*
-import dev.dercoderjo.netheritewars.util.checkPosition
 import dev.dercoderjo.netheritewars.util.convertTime
-import dev.dercoderjo.netheritewars.util.getNetheriteBlock
-import dev.dercoderjo.netheritewars.util.getNetheriteItem
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.title.TitlePart
@@ -36,7 +33,7 @@ import kotlin.math.floor
 class EventListener(private val plugin: NetheriteWars) : Listener {
     @EventHandler
     fun onPlayerMove(event: PlayerMoveEvent) {
-        checkPosition(plugin, event.player)
+        checkPositioninBorders(plugin, event.player)
     }
 
     @EventHandler
@@ -50,7 +47,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             )
         }
 
-        checkPosition(plugin, event.player)
+        checkPositioninBorders(plugin, event.player)
     }
 
     @EventHandler
@@ -185,15 +182,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         if (event.block.type != Material.NETHERITE_BLOCK || y >= plugin.CONFIG.getInt("VAULT.MINY") && y <= plugin.CONFIG.getInt("VAULT.MAXY") && ((x >= plugin.CONFIG.getInt("VAULT.BLUE.MINX") && x <= plugin.CONFIG.getInt("VAULT.BLUE.MAXX") && z >= plugin.CONFIG.getInt("VAULT.BLUE.MINZ") && z <= plugin.CONFIG.getInt("VAULT.BLUE.MAXZ")) || (x >= plugin.CONFIG.getInt("VAULT.RED.MINX") && x <= plugin.CONFIG.getInt("VAULT.RED.MAXX") && z >= plugin.CONFIG.getInt("VAULT.RED.MINZ") && z <= plugin.CONFIG.getInt("VAULT.RED.MAXZ")))) {
             val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
 
-            if (team == Teams.BLUE) {
-                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.BLUE).apply {
-                    netherite = plugin.DATABASE.getTeam(Teams.BLUE).netherite + 9
-                })
-            } else if (team == Teams.RED) {
-                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.RED).apply {
-                    netherite = plugin.DATABASE.getTeam(Teams.RED).netherite + 9
-                })
-            }
+            updateTeamNetheriteInDatabase(team, 9, plugin)
         } else {
             sendMessage(event.player, "Du kannst nur in deinem VAULT Netheriteblöcke platzieren")
             event.isCancelled = true
@@ -256,15 +245,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
             val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
 
-            if (team == Teams.BLUE) {
-                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.BLUE).apply {
-                    netherite = plugin.DATABASE.getTeam(Teams.BLUE).netherite - 9
-                })
-            } else if (team == Teams.RED) {
-                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.RED).apply {
-                    netherite = plugin.DATABASE.getTeam(Teams.RED).netherite - 9
-                })
-            }
+            updateTeamNetheriteInDatabase(team, 9, plugin)
         }
     }
 

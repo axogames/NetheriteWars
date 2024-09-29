@@ -1,10 +1,7 @@
 package dev.dercoderjo.netheritewars.command
 
 import dev.dercoderjo.netheritewars.NetheriteWars
-import dev.dercoderjo.netheritewars.common.message_commandUsageSyntax
-import dev.dercoderjo.netheritewars.common.message_notAPlayer
-import dev.dercoderjo.netheritewars.common.message_notEnoughPermissions
-import dev.dercoderjo.netheritewars.common.sendMessage
+import dev.dercoderjo.netheritewars.common.*
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -43,12 +40,15 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
         val maxX: Int
         val minZ: Int
         val maxZ: Int
+        val team: Teams
         if (args[0] == "Blau") {
+            team = Teams.BLUE
             minX = plugin.CONFIG.getInt("VAULT.BLUE.MINX")
             maxX = plugin.CONFIG.getInt("VAULT.BLUE.MAXX")
             minZ = plugin.CONFIG.getInt("VAULT.BLUE.MINZ")
             maxZ = plugin.CONFIG.getInt("VAULT.BLUE.MAXZ")
         } else if (args[0] == "Rot") {
+            team = Teams.RED
             minX = plugin.CONFIG.getInt("VAULT.RED.MINX")
             maxX = plugin.CONFIG.getInt("VAULT.RED.MAXX")
             minZ = plugin.CONFIG.getInt("VAULT.RED.MINZ")
@@ -107,6 +107,7 @@ class AddNetheriteCommand(private val plugin: NetheriteWars) : CommandExecutor, 
             }
         }
         sendMessage(player, "Im VAULT von Team ${args[0]} wurden $blockCount NetheriteBlöcke platziert")
+        updateTeamNetheriteInDatabase(team, 9 * blockCount, plugin)
         return true
     }
 

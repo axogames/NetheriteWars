@@ -9,10 +9,10 @@ VAULT:
     MINZ: 490
     MAXZ: 510
   RED:
-    MINX: -490
-    MAXX: -510
-    MINZ: -490
-    MAXZ: -510
+    MINX: -510
+    MAXX: -490
+    MINZ: -510
+    MAXZ: -490
 
 DATABASE:
   URL: jdbc:mysql://localhost:3306/netheritewars

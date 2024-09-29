@@ -203,6 +203,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         if (event.entity.type ==  EntityType.PLAYER) {
             val player = event.entity as Player
             if (player.health - event.damage <= 0.0) {
+                sendMessage(player, "Du bist gestorben und wirst am nächsten Morgen wiederbelebt")
                 player.gameMode = GameMode.SPECTATOR
                 player.persistentDataContainer.set(NamespacedKey("netheritewars", "respawn_time"), PersistentDataType.LONG, player.world.gameTime + (24000 - event.entity.world.time))
 

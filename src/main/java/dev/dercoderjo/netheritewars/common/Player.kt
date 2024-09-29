@@ -151,18 +151,15 @@ fun checkPositionInBorders(plugin: NetheriteWars, player: Player) {
             if (player.isGliding) {
                 player.isGliding = false
             }
-        } else if (dbPlayer.team == Teams.RED && dbPlayer.position != Position.RED) {
+        } else if (dbPlayer.team == Teams.RED) {
             if (dbPlayer.position != Position.RED) {
                 dbPlayer.position = Position.RED
                 sendMessage(player, "Du bist nun im Heimatgebiet")
-                player.gameMode = GameMode.SURVIVAL
                 if (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE) {
                     player.world.spawnParticle(Particle.FIREWORK, player.location, 64, 0.0, 0.0, 0.0, 0.25)
                     player.gameMode = GameMode.SURVIVAL
                 }
             }
-            sendMessage(player, "Du bist nun im Heimatgebiet")
-            player.gameMode = GameMode.SURVIVAL
             showHomeBossBar(player)
         }
     }

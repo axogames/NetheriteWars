@@ -1,10 +1,11 @@
 package dev.dercoderjo.netheritewars
 
 import com.destroystokyo.paper.event.server.ServerTickEndEvent
-import dev.dercoderjo.netheritewars.common.BattleRoyal
-import dev.dercoderjo.netheritewars.common.BattleRoyalStatus
-import dev.dercoderjo.netheritewars.common.Teams
-import dev.dercoderjo.netheritewars.util.*
+import dev.dercoderjo.netheritewars.common.*
+import dev.dercoderjo.netheritewars.util.checkPosition
+import dev.dercoderjo.netheritewars.util.convertTime
+import dev.dercoderjo.netheritewars.util.getNetheriteBlock
+import dev.dercoderjo.netheritewars.util.getNetheriteItem
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.title.TitlePart
@@ -25,8 +26,9 @@ import org.bukkit.event.inventory.InventoryCreativeEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.LootGenerateEvent
-import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import kotlin.math.abs
 import kotlin.math.floor
 
@@ -53,53 +55,11 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onPlayerQuit(event: PlayerQuitEvent) {
-        var netheriteCount = 0
+        val droppingNetheriteCount = dropNetherite(event.player, false)
 
-        for (item in event.player.inventory.contents) {
-            if (item?.type == Material.NETHERITE_INGOT) {
-                netheriteCount += item.amount
-            } else if (item?.type == Material.NETHERITE_BLOCK) {
-                netheriteCount += item.amount * 9
-            }
-        }
-
-        if (netheriteCount > 16) {
-            val droppingNetheriteCount = netheriteCount
-
-            for (item in event.player.inventory.contents) {
-                if (item?.type == Material.NETHERITE_INGOT) {
-                    netheriteCount -= item.amount
-                    item.amount = 0
-                }
-
-                if (netheriteCount <= 16) {
-                    break
-                }
-
-                if (item?.type == Material.NETHERITE_BLOCK) {
-                    netheriteCount -= item.amount * 9
-                    item.amount = 0
-                }
-
-                if (netheriteCount <= 16) {
-                    break
-                }
-            }
-
-            if (netheriteCount < 16) {
-                event.player.inventory.addItem(ItemStack(Material.NETHERITE_INGOT, 16 - netheriteCount))
-            }
-
-            event.player.world.dropItem(event.player.location, ItemStack(Material.NETHERITE_INGOT, droppingNetheriteCount - 16).apply {
-                val meta = itemMeta
-                meta?.setEnchantmentGlintOverride(true)
-                itemMeta = meta
-            }).apply {
-                isCustomNameVisible = true
-                isGlowing = true
-                persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 60000)
-                persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_owner"), PersistentDataType.STRING, event.player.uniqueId.toString())
-            }
+        event.player.world.dropItem(event.player.location, getNetheriteItem(droppingNetheriteCount - 16)).apply {
+            persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 60000)
+            persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_owner"), PersistentDataType.STRING, event.player.uniqueId.toString())
         }
     }
 
@@ -141,7 +101,17 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
         Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply {
             for (player in Bukkit.getOnlinePlayers()) {
-                getScore(player).score = checkInventory(player)
+                val netheriteCount = checkInventoryForNetherite(player)
+                getScore(player).score = netheriteCount
+
+                if (player.gameMode == GameMode.SURVIVAL) {
+                    val slownessStrength = (netheriteCount / 72.0).toInt()
+                    val weaknessStrength = (netheriteCount / 31.0).toInt()
+                    if (player.getPotionEffect(PotionEffectType.SLOWNESS)?.duration == -1) player.removePotionEffect(PotionEffectType.SLOWNESS)
+                    if (player.getPotionEffect(PotionEffectType.WEAKNESS)?.duration == -1) player.removePotionEffect(PotionEffectType.WEAKNESS)
+                    if (slownessStrength > 0) player.addPotionEffect(PotionEffect(PotionEffectType.SLOWNESS, -1, slownessStrength - 1, false, false, true))
+                    if (weaknessStrength > 0) player.addPotionEffect(PotionEffect(PotionEffectType.WEAKNESS, -1, weaknessStrength - 1, false, false, true))
+                }
 
                 val inventory = player.openInventory.topInventory
                 for (item in inventory.contents) {
@@ -212,7 +182,20 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             3. platzierter Block befindet sich entweder in der blauen oder roten Schatzkammer,
                wie in der Config beschrieben (VAULT.BLUE und VAULT.RED)
         */
-        if (event.block.type == Material.NETHERITE_BLOCK && !(y >= plugin.CONFIG.getInt("VAULT.MINY") && y <= plugin.CONFIG.getInt("VAULT.MAXY") && ((x >= plugin.CONFIG.getInt("VAULT.BLUE.MINX") && x <= plugin.CONFIG.getInt("VAULT.BLUE.MAXX") && z >= plugin.CONFIG.getInt("VAULT.BLUE.MINZ") && z <= plugin.CONFIG.getInt("VAULT.BLUE.MAXZ")) || (x >= plugin.CONFIG.getInt("VAULT.RED.MINX") && x <= plugin.CONFIG.getInt("VAULT.RED.MAXX") && z >= plugin.CONFIG.getInt("VAULT.RED.MINZ") && z <= plugin.CONFIG.getInt("VAULT.RED.MAXZ"))))) {
+        if (event.block.type != Material.NETHERITE_BLOCK || y >= plugin.CONFIG.getInt("VAULT.MINY") && y <= plugin.CONFIG.getInt("VAULT.MAXY") && ((x >= plugin.CONFIG.getInt("VAULT.BLUE.MINX") && x <= plugin.CONFIG.getInt("VAULT.BLUE.MAXX") && z >= plugin.CONFIG.getInt("VAULT.BLUE.MINZ") && z <= plugin.CONFIG.getInt("VAULT.BLUE.MAXZ")) || (x >= plugin.CONFIG.getInt("VAULT.RED.MINX") && x <= plugin.CONFIG.getInt("VAULT.RED.MAXX") && z >= plugin.CONFIG.getInt("VAULT.RED.MINZ") && z <= plugin.CONFIG.getInt("VAULT.RED.MAXZ")))) {
+            val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
+
+            if (team == Teams.BLUE) {
+                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.BLUE).apply {
+                    netherite = plugin.DATABASE.getTeam(Teams.BLUE).netherite + 9
+                })
+            } else if (team == Teams.RED) {
+                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.RED).apply {
+                    netherite = plugin.DATABASE.getTeam(Teams.RED).netherite + 9
+                })
+            }
+        } else {
+            sendMessage(event.player, "Du kannst nur in deinem VAULT Netheriteblöcke platzieren")
             event.isCancelled = true
         }
     }
@@ -225,9 +208,14 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         }
 
         if (event.entity.type ==  EntityType.PLAYER) {
-            if ((event.entity as Player).health - event.damage <= 0.0) {
-                (event.entity as Player).gameMode = GameMode.SPECTATOR
-                event.entity.persistentDataContainer.set(NamespacedKey("netheritewars", "respawn_time"), PersistentDataType.LONG, event.entity.world.gameTime + (24000 - event.entity.world.time))
+            val player = event.entity as Player
+            if (player.health - event.damage <= 0.0) {
+                player.gameMode = GameMode.SPECTATOR
+                player.persistentDataContainer.set(NamespacedKey("netheritewars", "respawn_time"), PersistentDataType.LONG, player.world.gameTime + (24000 - event.entity.world.time))
+
+                val droppingNetheriteCount = dropNetherite(player, true)
+                player.world.dropItem(player.location, getNetheriteItem(droppingNetheriteCount))
+
             }
         }
     }
@@ -242,7 +230,12 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         }
         val player: Player = entity as Player
 
-        if (event.entity.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
+        if (entity.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
+            sendMessage(damager, "${entity.name} ist im Friedensmodus, weshalb du diesen Spieler nicht angreifen kannst")
+            event.isCancelled = true
+            return
+        } else if (damager.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == true) {
+            sendMessage(damager, "Du bist im Friedensmodus, weshalb du ${entity.name} nicht angreifen kannst")
             event.isCancelled = true
             return
         }
@@ -251,7 +244,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
         if ((abs(player.location.z) < borderSize || damager.location.z < borderSize) && entity.world.environment == World.Environment.NORMAL) {
             event.isCancelled = true
-            (damager as Player).sendMessage(Component.text("Du kannst Spieler nicht auf der Grenze töten!").color(NamedTextColor.RED))
+            sendMessage(damager, "Du kannst Spieler nicht auf der Grenze angreifen")
         }
     }
 
@@ -259,7 +252,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     fun onBlockBreak(event: BlockBreakEvent) {
         if (event.block.type == Material.NETHERITE_BLOCK && event.player.gameMode == GameMode.SURVIVAL) {
             event.isDropItems = false
-            spawnNetheriteBlockEntity(event.block.location.add(0.5, 0.5, 0.5))
+            event.player.world.dropItem(event.block.location, getNetheriteBlock())
 
             val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
 
@@ -270,23 +263,6 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             } else if (team == Teams.RED) {
                 plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.RED).apply {
                     netherite = plugin.DATABASE.getTeam(Teams.RED).netherite - 9
-                })
-            }
-        }
-    }
-
-    @EventHandler
-    fun onBlockPlace(event: BlockPlaceEvent) {
-        if (event.block.type == Material.NETHERITE_BLOCK) {
-            val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
-
-            if (team == Teams.BLUE) {
-                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.BLUE).apply {
-                    netherite = plugin.DATABASE.getTeam(Teams.BLUE).netherite + 9
-                })
-            } else if (team == Teams.RED) {
-                plugin.DATABASE.setTeam(plugin.DATABASE.getTeam(Teams.RED).apply {
-                    netherite = plugin.DATABASE.getTeam(Teams.RED).netherite + 9
                 })
             }
         }

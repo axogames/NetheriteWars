@@ -242,7 +242,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
         val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
 
-        if ((abs(player.location.z) < borderSize || damager.location.z < borderSize) && entity.world.environment == World.Environment.NORMAL) {
+        if ((abs(player.location.z) < borderSize || abs(damager.location.z) < borderSize) && entity.world.environment == World.Environment.NORMAL) {
             event.isCancelled = true
             sendMessage(damager, "Du kannst Spieler nicht auf der Grenze angreifen")
         }

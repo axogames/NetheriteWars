@@ -50,12 +50,12 @@ class NetheriteWars : JavaPlugin() {
         Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply { displaySlot = DisplaySlot.PLAYER_LIST } ?: Bukkit.getScoreboardManager().mainScoreboard.registerNewObjective("netheritewars:netherite_player", Criteria.DUMMY, Component.empty()).apply { displaySlot = DisplaySlot.PLAYER_LIST }
         if (Bukkit.getScoreboardManager().mainScoreboard.getTeam("red") == null) {
             Bukkit.getScoreboardManager().mainScoreboard.registerNewTeam("red").apply {
-                prefix(Component.text("[Rot]").color(NamedTextColor.RED))
+                prefix(Component.text("[Rot] ").color(NamedTextColor.RED))
             }
         }
         if (Bukkit.getScoreboardManager().mainScoreboard.getTeam("blue") == null) {
             Bukkit.getScoreboardManager().mainScoreboard.registerNewTeam("blue").apply {
-                prefix(Component.text("[Blau]").color(NamedTextColor.BLUE))
+                prefix(Component.text("[Blau] ").color(NamedTextColor.BLUE))
             }
         }
 

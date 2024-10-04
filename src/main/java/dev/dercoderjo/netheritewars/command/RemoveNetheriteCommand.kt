@@ -97,6 +97,7 @@ class RemoveNetheriteCommand(private val plugin: NetheriteWars) : CommandExecuto
                 if (newLocation == null) {
                     if (count > 1) {
                         sendMessage(player, "Es konnten $count NetheriteBlöcke nicht entfernt werden.")
+                        updateTeamNetheriteInDatabase(team, -9 * (blockCount - count), plugin)
                     } else {
                         sendMessage(player, "Es konnte 1 Netheriteblock nicht entfernt werden")
                     }

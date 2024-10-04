@@ -80,14 +80,14 @@ fun checkPositionInBorders(plugin: NetheriteWars, player: Player) {
         if (progress > 1) {
             progress = 1f
         }
-        player.showBossBar(BossBar.bossBar(Component.text("Feindgebiet"), progress, BossBar.Color.RED, BossBar.Overlay.PROGRESS))
+        player.showBossBar(BossBar.bossBar(Component.empty(), progress, if (plugin.DATABASE.getPlayer(player.uniqueId.toString()).team == Teams.BLUE) BossBar.Color.RED else BossBar.Color.BLUE, BossBar.Overlay.PROGRESS))
     }
     fun showHomeBossBar(player: Player) {
         var progress = ((abs(player.location.z) - borderSize) / borderSize).toFloat()
         if (progress > 1) {
             progress = 1f
         }
-        player.showBossBar(BossBar.bossBar(Component.text("Heimatgebiet"), progress, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS))
+        player.showBossBar(BossBar.bossBar(Component.empty(), progress, if (plugin.DATABASE.getPlayer(player.uniqueId.toString()).team == Teams.BLUE) BossBar.Color.BLUE else BossBar.Color.RED, BossBar.Overlay.PROGRESS))
     }
 
     if (dbPlayer.team == Teams.RED) {

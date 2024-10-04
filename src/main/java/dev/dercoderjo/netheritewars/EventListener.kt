@@ -42,12 +42,9 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
+        //Spieler werden vom Server gekickt, wenn sie keine Berechtigung haben, zu joinen
         if (!plugin.DATABASE.checkPlayer(event.player.uniqueId.toString()) || !plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).whitelisted) {
-            event.player.kick(
-                Component.text("Du bist nicht auf der Whitelist!").color(NamedTextColor.RED)
-                    .append(Component.newline())
-                    .append(Component.newline())
-                    .append(Component.text("Bitte wende dich an ein Teammitglied").color(NamedTextColor.DARK_GREEN))
+            event.player.kick(Component.text("Du bist nicht auf der Whitelist!").color(NamedTextColor.RED).append(Component.newline()).append(Component.newline()).append(Component.text("Bitte wende dich an ein Teammitglied").color(NamedTextColor.DARK_GREEN))
             )
         }
 
@@ -56,12 +53,11 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onPlayerQuit(event: PlayerQuitEvent) {
+        //Spieler darf beim leaven maximal 16 Netherite haben, der Rest wird als Item gedroppt
         val droppingNetheriteCount = dropNetherite(event.player, false)
-
         if (droppingNetheriteCount < 16) {
             return
         }
-
         event.player.world.dropItem(event.player.location, getNetheriteItem(droppingNetheriteCount - 16)).apply {
             persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 60000)
             persistentDataContainer.set(NamespacedKey("netheritewars", "netherite_owner"), PersistentDataType.STRING, event.player.uniqueId.toString())
@@ -70,6 +66,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onInventoryPickupItem(event: InventoryPickupItemEvent) {
+        //Container wie Hopper können keine Netheriteingots- und Blöcke aufsammeln
         if (event.item.itemStack.type == Material.NETHERITE_INGOT || event.item.itemStack.type == Material.NETHERITE_BLOCK) {
             event.isCancelled = true
         }
@@ -77,74 +74,113 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onServerTickEnd(event: ServerTickEndEvent) {
-        for (world in Bukkit.getWorlds()) {
-            for (entity in world.entities) {
-                if (entity.type == EntityType.ITEM) {
-                    val cooldown = entity.persistentDataContainer.get(
-                        NamespacedKey("netheritewars", "netherite_cooldown"),
-                        PersistentDataType.LONG
-                    ) ?: continue
-
-                    if (cooldown < System.currentTimeMillis()) {
-                        entity.persistentDataContainer.remove(NamespacedKey("netheritewars", "netherite_cooldown"))
-                        entity.persistentDataContainer.remove(NamespacedKey("netheritewars", "netherite_owner"))
-                        entity.customName(Component.empty())
-                    } else {
-                        entity.customName(
-                            Component.text()
-                                .append(Component.text("Cooldown: ").color(NamedTextColor.RED))
-                                .append(
-                                    Component.text(floor((cooldown - System.currentTimeMillis()).toDouble() / 1000).toInt())
-                                        .color(NamedTextColor.WHITE)
-                                )
-                                .build()
-                        )
+        /**
+         * Der Cooldown von allen NetheriteIngots, die einen Owner haben, wird verringert.
+         * Wenn ein Item keinen Colldown mehr hat, kann es on allen Spielern aufgesammelt werden.
+         */
+        fun reduceNetheriteItemCooldown() {
+            for (world in Bukkit.getWorlds()) {
+                for (entity in world.entities) {
+                    if (entity.type == EntityType.ITEM) {
+                        val cooldown = entity.persistentDataContainer.get(NamespacedKey("netheritewars", "netherite_cooldown"), PersistentDataType.LONG) ?: continue
+                        if (cooldown < System.currentTimeMillis()) {
+                            entity.persistentDataContainer.remove(NamespacedKey("netheritewars", "netherite_cooldown"))
+                            entity.persistentDataContainer.remove(NamespacedKey("netheritewars", "netherite_owner"))
+                            entity.customName(Component.empty())
+                        } else {
+                            entity.customName(
+                                Component.text()
+                                    .append(Component.text("Cooldown: ").color(NamedTextColor.RED))
+                                    .append(
+                                        Component.text(floor((cooldown - System.currentTimeMillis()).toDouble() / 1000).toInt())
+                                            .color(NamedTextColor.WHITE)
+                                    )
+                                    .build()
+                            )
+                        }
                     }
                 }
             }
         }
 
-        Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply {
-            for (player in Bukkit.getOnlinePlayers()) {
-                val netheriteCount = checkInventoryForNetherite(player)
+        /**
+         * Ein Spieler enthält entsprechend der Anzahl an Netheriteingots und -blöcken Effekte.
+         *  - 1 Level Schwäche pro 31 Netheriteingots
+         *  - 1 Level Langsamkeit pro 72 Netheriteingots
+         *
+         *  Spieler im Kreativ- oder Zuschauermodus sind nicht betroffen.
+         *
+         *  @param player Der Spieler, der Effekte erhalten soll
+         *  @return Ob der Spieler die effekte tatsächlich erhalten hat
+         */
+        fun giveEffectForMuchNetherite(player: Player) : Boolean {
+            val netheriteCount = checkInventoryForNetherite(player)
+            Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply {
                 getScore(player).score = netheriteCount
+            }
 
-                if (player.gameMode == GameMode.SURVIVAL) {
-                    val slownessStrength = (netheriteCount / 72.0).toInt()
-                    val weaknessStrength = (netheriteCount / 31.0).toInt()
-                    if (player.getPotionEffect(PotionEffectType.SLOWNESS)?.duration == -1) player.removePotionEffect(PotionEffectType.SLOWNESS)
-                    if (player.getPotionEffect(PotionEffectType.WEAKNESS)?.duration == -1) player.removePotionEffect(PotionEffectType.WEAKNESS)
-                    if (slownessStrength > 0) player.addPotionEffect(PotionEffect(PotionEffectType.SLOWNESS, -1, slownessStrength - 1, false, false, true))
-                    if (weaknessStrength > 0) player.addPotionEffect(PotionEffect(PotionEffectType.WEAKNESS, -1, weaknessStrength - 1, false, false, true))
-                } else {
-                    player.removePotionEffect(PotionEffectType.WEAKNESS)
+            if (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE) {
+                val slownessStrength = (netheriteCount / 72.0).toInt()
+                val weaknessStrength = (netheriteCount / 31.0).toInt()
+                if (player.getPotionEffect(PotionEffectType.SLOWNESS)?.duration == -1) {
                     player.removePotionEffect(PotionEffectType.SLOWNESS)
                 }
+                if (player.getPotionEffect(PotionEffectType.WEAKNESS)?.duration == -1) {
+                    player.removePotionEffect(PotionEffectType.WEAKNESS)
+                }
+                if (slownessStrength > 0) {
+                    player.addPotionEffect(PotionEffect(PotionEffectType.SLOWNESS, -1, slownessStrength - 1, false, false, true))
+                }
+                if (weaknessStrength > 0) {
+                    player.addPotionEffect(PotionEffect(PotionEffectType.WEAKNESS, -1, weaknessStrength - 1, false, false, true))
+                }
+                return true
+            } else {
+                player.removePotionEffect(PotionEffectType.WEAKNESS)
+                player.removePotionEffect(PotionEffectType.SLOWNESS)
+                return false
+            }
+        }
 
-                val inventory = player.openInventory.topInventory
-                for (item in inventory.contents) {
-                    if (item?.type == Material.NETHERITE_INGOT || item?.type == Material.NETHERITE_BLOCK) {
-                        val inventoryHolder = inventory.holder
-                        if (inventoryHolder is BlockState) {
-                            val block = (inventoryHolder as BlockState).block
-                            block.world.spawnParticle(Particle.EXPLOSION, block.location, 1)
-                            for (drop in inventory.contents) {
-                                if (drop != null) {
-                                    block.world.dropItem(block.location, drop)
-                                }
+        /**
+         * Wenn ein Spieler ein Blockentity, dass Netherite enthält, öffnet oder geöffnet hat, so wird dieses gelöscht
+         *
+         * @param player Der Spieler, der überprüft werden soll
+         * @return Wahrheitswert, ob der Spieler ein Blockentity, dass Netherite enthält, geöffnet hat
+         */
+        fun explodeBlockEntityWithNetherite(player: Player) : Boolean {
+            val inventory = player.openInventory.topInventory
+            for (item in inventory.contents) {
+                if (item?.type == Material.NETHERITE_INGOT || item?.type == Material.NETHERITE_BLOCK) {
+                    val inventoryHolder = inventory.holder
+                    if (inventoryHolder is BlockState) {
+                        val block = (inventoryHolder as BlockState).block
+                        block.world.spawnParticle(Particle.EXPLOSION, block.location, 1)
+                        for (drop in inventory.contents) {
+                            if (drop != null) {
+                                block.world.dropItem(block.location, drop)
                             }
-                            block.type = Material.AIR
-                        } else if (inventoryHolder is Entity) {
-                            val entity = inventoryHolder as Entity
-                            if (entity.type == EntityType.PLAYER) {
-                                continue
-                            }
-                            entity.remove()
-                            entity.world.spawnParticle(Particle.EXPLOSION, entity.location, 1)
                         }
+                        block.type = Material.AIR
+                        return true
+                    } else if (inventoryHolder is Entity) {
+                        val entity = inventoryHolder as Entity
+                        if (entity.type == EntityType.PLAYER) {
+                            continue
+                        }
+                        entity.remove()
+                        entity.world.spawnParticle(Particle.EXPLOSION, entity.location, 1)
+                        return true
                     }
                 }
             }
+            return false
+        }
+
+        reduceNetheriteItemCooldown()
+        for (player in Bukkit.getOnlinePlayers()) {
+            giveEffectForMuchNetherite(player)
+            explodeBlockEntityWithNetherite(player)
         }
 
         if (plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.STARTED || plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.PAUSED) {
@@ -167,11 +203,8 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onPlayerPickItem(event: PlayerAttemptPickupItemEvent) {
-        val owner = event.item.persistentDataContainer.get(
-            NamespacedKey("netheritewars", "netherite_owner"),
-            PersistentDataType.STRING
-        ) ?: return
-
+        // Netheriteingots können nur von ihrem Owner eingesammelt werden
+        val owner = event.item.persistentDataContainer.get(NamespacedKey("netheritewars", "netherite_owner"), PersistentDataType.STRING) ?: return
         if (owner != event.player.uniqueId.toString()) {
             event.isCancelled = true
         }
@@ -179,7 +212,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onPlayerBlockPlace(event: BlockPlaceEvent) {
-        sendMessage(event.player, event.block.type.name)
+        //Überprüft, ob ein Netheriteblock platziert werden darf
         if (event.block.type == Material.NETHERITE_BLOCK) {
             var team = Teams.UNSET
             if (inRedVault(event.block.location, plugin)) {
@@ -190,7 +223,6 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
                 event.isCancelled = true
                 sendMessage(event.player, "Du kannst nur in einem VAULT Netheriteblöcke platzieren")
             }
-            sendMessage(event.player, team.name)
             updateTeamNetheriteInDatabase(team, 9, plugin)
         }
     }

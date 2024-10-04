@@ -21,6 +21,12 @@ class Player(
     val orga: Boolean)
     {}
 
+/**
+ * Zählt die Anzahl der Netheriteingots- und Blöcke im Inventar eines Spielers.
+ *
+ * @param player Der Spieler, dessen Inventar durchsucht werden soll
+ * @return 9xAnzahl Blöcke + Anzahl Ingots
+ */
 fun checkInventoryForNetherite(player: Player): Int {
     var netheriteCount = 0
 
@@ -34,10 +40,18 @@ fun checkInventoryForNetherite(player: Player): Int {
     return netheriteCount
 }
 
+/**
+ * Droppt das Netherite aus dem Inventar eines Spielers.
+ * Unabhöngig von der Anzahl werden immer mindestens vier gedroppt.
+ *
+ * @param player Der Spieler, dessen Netherite gedroppt werden soll
+ * @param looseAll Wahrheitswert, ob der Spieler all sein Netherite verlieren soll oder bis zu 16 behält
+ * @return Die Anzahl an Netheriteingots, die der Spieler fallen lässt
+ */
 fun dropNetherite(player: Player, looseAll: Boolean = true) : Int {
     var netheriteCount = checkInventoryForNetherite(player)
 
-    if (netheriteCount > 16) {
+    if (netheriteCount > 16 || looseAll) {
         val droppingNetheriteCount = netheriteCount
 
         for (item in player.inventory.contents) {
@@ -68,6 +82,12 @@ fun dropNetherite(player: Player, looseAll: Boolean = true) : Int {
     return 4
 }
 
+/**
+ * Zeigt einem Spieler entsprechend seiner Position in der Welt eine Bossbar an.
+ *
+ * @param plugin Das Basisplugin von NetheriteWars
+ * @param player Der Spieler, dessen Bossbar aktualisiert werden soll
+ */
 fun checkPositionInBorders(plugin: NetheriteWars, player: Player) {
     val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
     val dbPlayer = plugin.DATABASE.getPlayer(player.uniqueId.toString())
@@ -167,6 +187,12 @@ fun checkPositionInBorders(plugin: NetheriteWars, player: Player) {
     plugin.DATABASE.setPlayer(dbPlayer)
 }
 
+/**
+ * Prüft, ob irgendein Spieler innerhalb eines Blockes steht.
+ *
+ * @param block Der Block, der überprüft werden soll
+ * @return Ob ein Spieler in diesem Block steht
+ */
 fun isPlayerInBlock(block: Block): Boolean {
     val blockLocation = block.location
     val world = block.world

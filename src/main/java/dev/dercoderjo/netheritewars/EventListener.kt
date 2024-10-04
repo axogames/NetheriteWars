@@ -3,6 +3,8 @@ package dev.dercoderjo.netheritewars
 import com.destroystokyo.paper.event.server.ServerTickEndEvent
 import dev.dercoderjo.netheritewars.common.*
 import dev.dercoderjo.netheritewars.util.convertTime
+import dev.dercoderjo.netheritewars.util.inBlueVault
+import dev.dercoderjo.netheritewars.util.inRedVault
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.title.TitlePart
@@ -14,6 +16,7 @@ import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
@@ -23,6 +26,7 @@ import org.bukkit.event.inventory.InventoryCreativeEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.LootGenerateEvent
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
@@ -174,25 +178,20 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     }
 
     @EventHandler
-    fun onPlayerPlaceBlock(event: BlockPlaceEvent) {
-        val x = event.block.location.blockX
-        val y = event.block.location.blockY
-        val z = event.block.location.blockZ
-
-        /*
-        Bedingungen für das Platzieren eines Netheriteblockes:
-            1. platzierter Block ist ein Netheriteblock
-            2. platzierter Block befindet sich auf der richtigen y-Höhe, wie in der Config (VAULT) beschrieben
-            3. platzierter Block befindet sich entweder in der blauen oder roten Schatzkammer,
-               wie in der Config beschrieben (VAULT.BLUE und VAULT.RED)
-        */
-        if (event.block.type != Material.NETHERITE_BLOCK || y >= plugin.CONFIG.getInt("VAULT.MINY") && y <= plugin.CONFIG.getInt("VAULT.MAXY") && ((x >= plugin.CONFIG.getInt("VAULT.BLUE.MINX") && x <= plugin.CONFIG.getInt("VAULT.BLUE.MAXX") && z >= plugin.CONFIG.getInt("VAULT.BLUE.MINZ") && z <= plugin.CONFIG.getInt("VAULT.BLUE.MAXZ")) || (x >= plugin.CONFIG.getInt("VAULT.RED.MINX") && x <= plugin.CONFIG.getInt("VAULT.RED.MAXX") && z >= plugin.CONFIG.getInt("VAULT.RED.MINZ") && z <= plugin.CONFIG.getInt("VAULT.RED.MAXZ")))) {
-            val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
-
+    fun onPlayerBlockPlace(event: BlockPlaceEvent) {
+        sendMessage(event.player, event.block.type.name)
+        if (event.block.type == Material.NETHERITE_BLOCK) {
+            var team = Teams.UNSET
+            if (inRedVault(event.block.location, plugin)) {
+                team = Teams.RED
+            } else if (inBlueVault(event.block.location, plugin)) {
+                team = Teams.BLUE
+            } else if (event.player.gameMode != GameMode.CREATIVE) {
+                event.isCancelled = true
+                sendMessage(event.player, "Du kannst nur in einem VAULT Netheriteblöcke platzieren")
+            }
+            sendMessage(event.player, team.name)
             updateTeamNetheriteInDatabase(team, 9, plugin)
-        } else {
-            sendMessage(event.player, "Du kannst nur in deinem VAULT Netheriteblöcke platzieren")
-            event.isCancelled = true
         }
     }
 
@@ -247,13 +246,19 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onBlockBreak(event: BlockBreakEvent) {
-        if (event.block.type == Material.NETHERITE_BLOCK && event.player.gameMode == GameMode.SURVIVAL) {
-            event.isDropItems = false
-            event.player.world.dropItem(event.block.location, getNetheriteBlock())
+        if (event.block.type == Material.NETHERITE_BLOCK) {
+            if (event.player.gameMode == GameMode.SURVIVAL) {
+                event.isDropItems = false
+                event.player.world.dropItem(event.block.location, getNetheriteBlock())
+            }
 
-            val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
-
-            updateTeamNetheriteInDatabase(team, 9, plugin)
+            var team = Teams.UNSET
+            if (inRedVault(event.block.location, plugin)) {
+                team = Teams.RED
+            } else if (inBlueVault(event.block.location, plugin)) {
+                team = Teams.BLUE
+            }
+            updateTeamNetheriteInDatabase(team, -9, plugin)
         }
     }
 
@@ -315,6 +320,38 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             when ((entity as Item).itemStack.type) {
                 Material.NETHERITE_INGOT, Material.NETHERITE_BLOCK -> entity.isGlowing = true
                 else -> {}
+            }
+        }
+    }
+
+    @EventHandler
+    fun onPlayerInteract (event: PlayerInteractEvent) {
+        val player = event.player
+
+        if (event.action == Action.RIGHT_CLICK_BLOCK && event.hand == EquipmentSlot.HAND) {
+            val clickedBlock = event.clickedBlock!!
+            val itemInHand = player.inventory.itemInMainHand
+            if (itemInHand.type == Material.NETHERITE_INGOT && (itemInHand.amount >= 9 || player.gameMode == GameMode.CREATIVE)) {
+                val blockToPlace = clickedBlock.getRelative(event.blockFace)
+                if (blockToPlace.type == Material.AIR && !isPlayerInBlock(blockToPlace)) {
+                    Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                        blockToPlace.type = Material.NETHERITE_BLOCK
+                        val placeEvent = BlockPlaceEvent(blockToPlace, blockToPlace.state, clickedBlock, itemInHand, player, true, EquipmentSlot.HAND)
+                        Bukkit.getServer().pluginManager.callEvent(placeEvent)
+
+                        if (!placeEvent.isCancelled) {
+                            if (player.gameMode != GameMode.CREATIVE) {
+                                itemInHand.amount -= 9
+                                sendMessage(player, "Du hast 9 NetheriteIngots aus deiner Hand in einen Block umgewandelt und platziert")
+                            } else {
+                                sendMessage(player, "Du hast einen Netheriteblock aus Netheriteingots platziert")
+                            }
+                        } else {
+                            blockToPlace.type = Material.AIR
+                        }
+                    }, 1)
+
+                }
             }
         }
     }

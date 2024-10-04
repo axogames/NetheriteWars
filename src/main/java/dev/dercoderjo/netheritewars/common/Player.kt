@@ -7,6 +7,7 @@ import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.World
+import org.bukkit.block.Block
 import org.bukkit.entity.Player
 import kotlin.math.abs
 
@@ -164,4 +165,22 @@ fun checkPositionInBorders(plugin: NetheriteWars, player: Player) {
         }
     }
     plugin.DATABASE.setPlayer(dbPlayer)
+}
+
+fun isPlayerInBlock(block: Block): Boolean {
+    val blockLocation = block.location
+    val world = block.world
+
+    val nearbyEntities = world.getNearbyEntities(blockLocation, 1.0, 1.0, 1.0)
+
+    for (entity in nearbyEntities) {
+        if (entity is Player) {
+            val playerLocation = entity.location
+            if (playerLocation.blockX == blockLocation.blockX && (playerLocation.blockY == blockLocation.blockY || playerLocation.blockY == blockLocation.blockY - 1) && playerLocation.blockZ == blockLocation.blockZ) {
+                return true
+            }
+        }
+    }
+
+    return false
 }

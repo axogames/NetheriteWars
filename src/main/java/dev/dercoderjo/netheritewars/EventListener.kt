@@ -3,12 +3,12 @@ package dev.dercoderjo.netheritewars
 import com.destroystokyo.paper.event.server.ServerTickEndEvent
 import dev.dercoderjo.netheritewars.common.*
 import dev.dercoderjo.netheritewars.util.convertTime
-import dev.dercoderjo.netheritewars.util.inBlueVault
-import dev.dercoderjo.netheritewars.util.inRedVault
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.title.TitlePart
 import org.bukkit.*
+import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.block.BlockState
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
@@ -26,7 +26,6 @@ import org.bukkit.event.inventory.InventoryCreativeEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.LootGenerateEvent
-import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
@@ -355,4 +354,42 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             }
         }
     }
+
+    @EventHandler
+    fun onPlayerInteract(event: PlayerInteractEvent) {
+        if (event.clickedBlock != null) {
+            if (event.clickedBlock!!.location.z <= plugin.CONFIG.getInt("BORDER_SIZE") && plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team == Teams.BLUE) {
+                event.isCancelled = true
+            } else if (event.clickedBlock!!.location.z >= -plugin.CONFIG.getInt("BORDER_SIZE") && plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team == Teams.RED) {
+                event.isCancelled = true
+            }
+        }
+
+        if (event.action == Action.RIGHT_CLICK_BLOCK) {
+            val block: Block? = event.clickedBlock
+            if (event.player.inventory.itemInMainHand.type == Material.NETHERITE_INGOT && event.player.inventory.itemInMainHand.amount >= 9 && block != null) {
+                val targetBlock: Block = getTargetBlock(block, event.blockFace)
+                if (targetBlock.type == Material.AIR) {
+                    val x = targetBlock.location.blockX
+                    val y = targetBlock.location.blockY
+                    val z = targetBlock.location.blockZ
+
+                    if (y >= plugin.CONFIG.getInt("VAULT.MINY") && y <= plugin.CONFIG.getInt("VAULT.MAXY") && ((x >= plugin.CONFIG.getInt("VAULT.BLUE.MINX") && x <= plugin.CONFIG.getInt("VAULT.BLUE.MAXX") && z >= plugin.CONFIG.getInt("VAULT.BLUE.MINZ") && z <= plugin.CONFIG.getInt("VAULT.BLUE.MAXZ")) || (x >= plugin.CONFIG.getInt("VAULT.RED.MINX") && x <= plugin.CONFIG.getInt("VAULT.RED.MAXX") && z >= plugin.CONFIG.getInt("VAULT.RED.MINZ") && z <= plugin.CONFIG.getInt("VAULT.RED.MAXZ")))) {
+                        val team = plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team
+
+                        updateTeamNetheriteInDatabase(team, 9, plugin)
+
+                        targetBlock.type = Material.NETHERITE_BLOCK
+                        event.player.inventory.itemInMainHand.amount -= 9
+                    } else {
+                        sendMessage(event.player, "Du kannst nur in deinem VAULT Netheritblöcke platzieren")
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun getTargetBlock(block: Block, face: BlockFace): Block {
+    return block.getRelative(face.modX, face.modY, face.modZ)
 }

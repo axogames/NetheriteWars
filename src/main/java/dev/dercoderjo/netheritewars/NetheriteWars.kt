@@ -13,8 +13,6 @@ import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import org.bukkit.scoreboard.Criteria
-import org.bukkit.scoreboard.DisplaySlot
 
 class NetheriteWars : JavaPlugin() {
     val CONFIG = config
@@ -31,8 +29,7 @@ class NetheriteWars : JavaPlugin() {
         Bukkit.removeRecipe(NamespacedKey.minecraft("netherite_ingot_from_netherite_block"))
         Bukkit.removeRecipe(NamespacedKey.minecraft("netherite_block"))
 
-        Bukkit.addRecipe(ShapelessRecipe(NamespacedKey(this, "netherite_ingot"), getNetheriteItem(9)).addIngredient(
-            getNetheriteBlock(1)))
+        Bukkit.addRecipe(ShapelessRecipe(NamespacedKey(this, "netherite_ingot"), getNetheriteItem(9)).addIngredient(getNetheriteBlock(1)))
         Bukkit.addRecipe(ShapedRecipe(NamespacedKey(this, "netherite_block"), getNetheriteBlock(1)).shape("NNN","NNN","NNN").setIngredient('N', getNetheriteItem(9)))
 
         this.getCommand("kill")?.setExecutor(KillCommand())
@@ -45,18 +42,10 @@ class NetheriteWars : JavaPlugin() {
         this.getCommand("addnetherite")?.tabCompleter = AddNetheriteCommand(this)
         this.getCommand("removenetherite")?.setExecutor(RemoveNetheriteCommand(this))
         this.getCommand("removenetherite")?.tabCompleter = RemoveNetheriteCommand(this)
+        this.getCommand("stats")?.setExecutor(StatsCommand())
 
-
-        Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply { displaySlot = DisplaySlot.PLAYER_LIST } ?: Bukkit.getScoreboardManager().mainScoreboard.registerNewObjective("netheritewars:netherite_player", Criteria.DUMMY, Component.empty()).apply { displaySlot = DisplaySlot.PLAYER_LIST }
-        if (Bukkit.getScoreboardManager().mainScoreboard.getTeam("red") == null) {
-            Bukkit.getScoreboardManager().mainScoreboard.registerNewTeam("red").apply {
-                prefix(Component.text("[Rot] ").color(NamedTextColor.RED))
-            }
-        }
-        if (Bukkit.getScoreboardManager().mainScoreboard.getTeam("blue") == null) {
-            Bukkit.getScoreboardManager().mainScoreboard.registerNewTeam("blue").apply {
-                prefix(Component.text("[Blau] ").color(NamedTextColor.BLUE))
-            }
+        for (objective in Bukkit.getScoreboardManager().mainScoreboard.objectives) {
+            objective.unregister()
         }
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, {

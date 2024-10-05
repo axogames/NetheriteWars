@@ -39,3 +39,7 @@ commands:
     default: true
     aliases:
       - remnetherite
+  stats:
+    description: Toggle the Teamnetherite Scoreboard
+    usage: /stats
+    default: true

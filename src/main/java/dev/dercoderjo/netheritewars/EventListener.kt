@@ -7,6 +7,7 @@ import dev.dercoderjo.netheritewars.util.inBlueVault
 import dev.dercoderjo.netheritewars.util.inRedVault
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.title.TitlePart
 import org.bukkit.*
 import org.bukkit.block.BlockState
@@ -30,6 +31,8 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import org.bukkit.scoreboard.Criteria
+import org.bukkit.scoreboard.DisplaySlot
 import kotlin.math.abs
 import kotlin.math.floor
 
@@ -42,13 +45,33 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
+        val player = event.player
         //Spieler werden vom Server gekickt, wenn sie keine Berechtigung haben, zu joinen
-        if (!plugin.DATABASE.checkPlayer(event.player.uniqueId.toString()) || !plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).whitelisted) {
+        if (!plugin.DATABASE.checkPlayer(player.uniqueId.toString()) || !plugin.DATABASE.getPlayer(player.uniqueId.toString()).whitelisted) {
             event.player.kick(Component.text("Du bist nicht auf der Whitelist!").color(NamedTextColor.RED).append(Component.newline()).append(Component.newline()).append(Component.text("Bitte wende dich an ein Teammitglied").color(NamedTextColor.DARK_GREEN))
             )
         }
 
         checkPositionInBorders(plugin, event.player)
+        player.scoreboard = Bukkit.getScoreboardManager().newScoreboard
+        player.scoreboard.registerNewObjective("netheritewars_netherite-player", Criteria.DUMMY, Component.empty()).apply { displaySlot = DisplaySlot.PLAYER_LIST }
+        player.scoreboard.registerNewObjective("netheritewars_netherite-team", Criteria.DUMMY, Component.
+        text("N").color(TextColor.fromHexString("#888888")).append(Component.
+        text("e").color(TextColor.fromHexString("#848484"))).append(Component.
+        text("t").color(TextColor.fromHexString("#808080"))).append(Component.
+        text("h").color(TextColor.fromHexString("#7B7B7B"))).append(Component.
+        text("e").color(TextColor.fromHexString("#777777"))).append(Component.
+        text("r").color(TextColor.fromHexString("#737373"))).append(Component.
+        text("i").color(TextColor.fromHexString("#6F6F6F"))).append(Component.
+        text("t").color(TextColor.fromHexString("#6A6A6A"))).append(Component.
+        text("e").color(TextColor.fromHexString("#666666"))).append(Component.
+        text("W").color(TextColor.fromHexString("#626262"))).append(Component.
+        text("a").color(TextColor.fromHexString("#5E5E5E"))).append(Component.
+        text("r").color(TextColor.fromHexString("#595959"))).append(Component.
+        text("s").color(TextColor.fromHexString("#555555")))
+        ).apply { displaySlot = DisplaySlot.SIDEBAR }
+        player.scoreboard.registerNewTeam("red").apply { prefix(Component.text("[Rot] ").color(NamedTextColor.RED)) }
+        player.scoreboard.registerNewTeam("blue").apply { prefix(Component.text("[Blau] ").color(NamedTextColor.BLUE)) }
     }
 
     @EventHandler
@@ -109,13 +132,14 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
          *  - 1 Level Langsamkeit pro 72 Netheriteingots
          *
          *  Spieler im Kreativ- oder Zuschauermodus sind nicht betroffen.
+         *  Aktualisiert außerdem den Netheritecount in der Spielerliste
          *
          *  @param player Der Spieler, der Effekte erhalten soll
          *  @return Ob der Spieler die effekte tatsächlich erhalten hat
          */
         fun giveEffectForMuchNetherite(player: Player) : Boolean {
             val netheriteCount = checkInventoryForNetherite(player)
-            Bukkit.getScoreboardManager().mainScoreboard.getObjective("netheritewars:netherite_player")?.apply {
+            player.scoreboard.getObjective("netheritewars_netherite-player")?.apply {
                 getScore(player).score = netheriteCount
             }
 
@@ -181,6 +205,15 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         for (player in Bukkit.getOnlinePlayers()) {
             giveEffectForMuchNetherite(player)
             explodeBlockEntityWithNetherite(player)
+            player.scoreboard.getObjective("netheritewars_netherite-team")?.apply {
+                if (player.persistentDataContainer.has(NamespacedKey("netheritewars", "stats"))) {
+                    displaySlot = DisplaySlot.SIDEBAR
+                    getScore("§9Blau").score = plugin.DATABASE.getTeam(Teams.BLUE).netherite
+                    getScore("§cRot").score = plugin.DATABASE.getTeam(Teams.RED).netherite
+                } else {
+                    displaySlot = DisplaySlot.SIDEBAR_TEAM_BLACK
+                }
+            }
         }
 
         if (plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.STARTED || plugin.cachedBattleRoyalData?.status == BattleRoyalStatus.PAUSED) {

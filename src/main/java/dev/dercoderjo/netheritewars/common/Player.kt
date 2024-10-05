@@ -122,7 +122,7 @@ fun checkPositionInBorders(plugin: NetheriteWars, player: Player) {
         return
     }
 
-    var activeBossBar : BossBar = player.activeBossBars().first()
+    var activeBossBar : BossBar = player.activeBossBars().toList().toList()[0]
     var bossbarTeam : Teams = Teams.UNSET
     for (bossbar in player.activeBossBars()) {
         if (bossbar.name() == Component.text("Grenzgebiet")) {

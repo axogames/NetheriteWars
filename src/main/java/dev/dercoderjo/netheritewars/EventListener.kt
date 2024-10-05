@@ -123,6 +123,14 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
                             )
                         }
                     }
+                    if (entity.type == EntityType.PLAYER) {
+                        val playerCooldown = entity.persistentDataContainer.get(NamespacedKey("netheritewars", "peace_cooldown"), PersistentDataType.LONG) ?: continue
+                        if (playerCooldown < System.currentTimeMillis()) {
+                            entity.persistentDataContainer.remove(NamespacedKey("netheritewars", "peace_cooldown"))
+                        } else {
+                            entity.sendActionBar(Component.text("Kampfcooldwon: ${floor((playerCooldown - System.currentTimeMillis()).toDouble() / 1000).toInt()}", NamedTextColor.RED))
+                        }
+                    }
                 }
             }
         }
@@ -308,11 +316,13 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         }
 
         val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
-
         if ((abs(player.location.z) < borderSize || abs(damager.location.z) < borderSize) && entity.world.environment == World.Environment.NORMAL) {
             event.isCancelled = true
             sendMessage(damager, "Du kannst Spieler nicht auf der Grenze angreifen")
         }
+
+        entity.persistentDataContainer.set(NamespacedKey("netheritewars", "peace_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 300000)
+        damager.persistentDataContainer.set(NamespacedKey("netheritewars", "peace_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 300000)
     }
 
     @EventHandler

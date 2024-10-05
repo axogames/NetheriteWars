@@ -24,6 +24,8 @@ class PeaceCommand(private val plugin: NetheriteWars) : CommandExecutor {
 
         if (sender.persistentDataContainer.has(NamespacedKey("netheritewars", "peace"))) {
             sendMessage(sender,"Du bist bereits im Friedensmodus")
+        } else if(sender.persistentDataContainer.has(NamespacedKey("netheritewars", "peace_cooldown"))) {
+            sendMessage(sender, "Du kannst nicht in den Freidensmodus, da du vor weniger als 5 Minuten gekämpft hast")
         } else {
             sender.persistentDataContainer.set(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN, true)
             sendMessage(sender, "Du bist nun im Friedensmodus")

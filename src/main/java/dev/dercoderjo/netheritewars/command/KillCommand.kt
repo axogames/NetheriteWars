@@ -1,5 +1,6 @@
 package dev.dercoderjo.netheritewars.command
 
+import dev.dercoderjo.netheritewars.common.message_notAPlayer
 import dev.dercoderjo.netheritewars.common.sendMessage
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
@@ -11,7 +12,8 @@ import org.bukkit.entity.Player
 class KillCommand : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if (sender !is Player) {
-            return false
+            message_notAPlayer(sender)
+            return true
         }
 
         if (sender.gameMode == GameMode.CREATIVE) {

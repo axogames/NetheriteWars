@@ -7,7 +7,6 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.bukkit.persistence.PersistentDataType
 
 class NoPeaceCommand : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -16,11 +15,11 @@ class NoPeaceCommand : CommandExecutor {
             return true
         }
 
-        if (sender.persistentDataContainer.get(NamespacedKey("netheritewars", "peace"), PersistentDataType.BOOLEAN) == false) {
-            sendMessage(sender, "Du bist bereits im Kriegsmodus.")
-        } else {
+        if (!sender.persistentDataContainer.has(NamespacedKey("netheritewars", "peace"))) {
             sender.persistentDataContainer.remove(NamespacedKey("netheritewars", "peace"))
-            sendMessage(sender, "Du bist nun im Kriegsmodus.")
+            sendMessage(sender, "Du bist nun nicht mehr im Friedensmodus")
+        } else {
+            sendMessage(sender, "Du bist nicht im Friedensmodus")
         }
         return true
     }

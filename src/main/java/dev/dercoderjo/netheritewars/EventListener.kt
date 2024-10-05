@@ -214,16 +214,14 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     fun onPlayerBlockPlace(event: BlockPlaceEvent) {
         //Überprüft, ob ein Netheriteblock platziert werden darf
         if (event.block.type == Material.NETHERITE_BLOCK) {
-            var team = Teams.UNSET
             if (inRedVault(event.block.location, plugin)) {
-                team = Teams.RED
+                updateTeamNetheriteInDatabase(Teams.RED, 9, plugin)
             } else if (inBlueVault(event.block.location, plugin)) {
-                team = Teams.BLUE
+                updateTeamNetheriteInDatabase(Teams.BLUE, 9, plugin)
             } else if (event.player.gameMode != GameMode.CREATIVE) {
                 event.isCancelled = true
                 sendMessage(event.player, "Du kannst nur in einem VAULT Netheriteblöcke platzieren")
             }
-            updateTeamNetheriteInDatabase(team, 9, plugin)
         }
     }
 
@@ -360,21 +358,12 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     fun onPlayerInteract (event: PlayerInteractEvent) {
         val player = event.player
 
-
-
         if (event.action == Action.RIGHT_CLICK_BLOCK && event.hand == EquipmentSlot.HAND) {
             val clickedBlock = event.clickedBlock!!
             val itemInHand = player.inventory.itemInMainHand
             if (itemInHand.type == Material.NETHERITE_INGOT && (itemInHand.amount >= 9 || player.gameMode == GameMode.CREATIVE)) {
                 val blockToPlace = clickedBlock.getRelative(event.blockFace)
                 if (blockToPlace.type == Material.AIR && !isPlayerInBlock(blockToPlace)) {
-                        if (blockToPlace.z <= plugin.CONFIG.getInt("BORDER_SIZE") && plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team == Teams.BLUE) {
-                            event.isCancelled = true
-                            return
-                        } else if (blockToPlace.z >= -plugin.CONFIG.getInt("BORDER_SIZE") && plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).team == Teams.RED) {
-                            event.isCancelled = true
-                            return
-                        }
                     Bukkit.getScheduler().runTaskLater(plugin, Runnable {
                         blockToPlace.type = Material.NETHERITE_BLOCK
                         val placeEvent = BlockPlaceEvent(blockToPlace, blockToPlace.state, clickedBlock, itemInHand, player, true, EquipmentSlot.HAND)

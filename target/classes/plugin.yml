@@ -9,13 +9,13 @@ commands:
     usage: /kill
     default: true
   peace:
-    description: Peace mode
+    description: Disables fishting with other players
     usage: /peace
     default: true
     aliases:
       - frieden
   nopeace:
-    description: No Peace mode
+    description: Enables fighting with other players (Disables /peace)
     usage: /nopeace
     default: true
     aliases:
@@ -23,23 +23,27 @@ commands:
       - unpeace
   gift:
     description: Sets a netherite-gift.
-    usage: /gift <anzahl> <typ>
+    usage: /gift <Number 1-175> [standard | blocks | random]
     default: true
   battleroyale:
     description: Battle Royale
-    usage: /battleroyale
+    usage: /battleroyale <prepare | start | pause | unpause | addtime <Zahl><s | m | h> | end>
     default: true
   addnetherite:
     description: Add Netherite Blocks to Team
-    usage: /addnetherite <team> <anzahl>
+    usage: /addnetherite <Blau | Rot> <Number >0>
     default: true
   removenetherite:
     description: Remove Netherite Blocks from a Team
-    usage: /removenetherite <team> <anzahl>
+    usage: /removenetherite Blau | Rot> <Number >0>
     default: true
     aliases:
       - remnetherite
   stats:
     description: Toggle the Teamnetherite Scoreboard
     usage: /stats
+    default: true
+  help:
+    description: Show the help menu
+    usage: /help
     default: true

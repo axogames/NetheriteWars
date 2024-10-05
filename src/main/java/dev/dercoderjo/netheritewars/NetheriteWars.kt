@@ -43,6 +43,7 @@ class NetheriteWars : JavaPlugin() {
         this.getCommand("removenetherite")?.setExecutor(RemoveNetheriteCommand(this))
         this.getCommand("removenetherite")?.tabCompleter = RemoveNetheriteCommand(this)
         this.getCommand("stats")?.setExecutor(StatsCommand())
+        this.getCommand("help")?.setExecutor(HelpCommand(this))
 
         for (objective in Bukkit.getScoreboardManager().mainScoreboard.objectives) {
             objective.unregister()

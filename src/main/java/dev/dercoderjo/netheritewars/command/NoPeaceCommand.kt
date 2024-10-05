@@ -15,7 +15,7 @@ class NoPeaceCommand : CommandExecutor {
             return true
         }
 
-        if (!sender.persistentDataContainer.has(NamespacedKey("netheritewars", "peace"))) {
+        if (sender.persistentDataContainer.has(NamespacedKey("netheritewars", "peace"))) {
             sender.persistentDataContainer.remove(NamespacedKey("netheritewars", "peace"))
             sendMessage(sender, "Du bist nun nicht mehr im Friedensmodus")
         } else {

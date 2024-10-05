@@ -22,6 +22,7 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.EntitySpawnEvent
 import org.bukkit.event.inventory.InventoryCreativeEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
@@ -244,7 +245,14 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     }
 
     @EventHandler
-    fun onPlayerBlockPlace(event: BlockPlaceEvent) {
+    fun onBlockPlace(event: BlockPlaceEvent) {
+        //Kein Block darf innerhalb des Grenzgebietes platziert werden
+        val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
+        if (abs(event.block.z) <= borderSize) {
+            event.isCancelled = true
+            return
+        }
+
         //Überprüft, ob ein Netheriteblock platziert werden darf
         if (event.block.type == Material.NETHERITE_BLOCK) {
             if (inRedVault(event.block.location, plugin)) {
@@ -309,19 +317,24 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
     @EventHandler
     fun onBlockBreak(event: BlockBreakEvent) {
+        val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
+        if (abs(event.block.z) <= borderSize) {
+            event.isCancelled = true
+            return
+        }
+
         if (event.block.type == Material.NETHERITE_BLOCK) {
             if (event.player.gameMode == GameMode.SURVIVAL) {
                 event.isDropItems = false
                 event.player.world.dropItem(event.block.location, getNetheriteBlock())
             }
 
-            var team = Teams.UNSET
             if (inRedVault(event.block.location, plugin)) {
-                team = Teams.RED
+                updateTeamNetheriteInDatabase(Teams.RED, -9, plugin)
             } else if (inBlueVault(event.block.location, plugin)) {
-                team = Teams.BLUE
+                updateTeamNetheriteInDatabase(Teams.BLUE, -9, plugin)
             }
-            updateTeamNetheriteInDatabase(team, -9, plugin)
+
         }
     }
 
@@ -415,6 +428,18 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
                     }, 1)
 
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    fun onEntityExplode(event: EntityExplodeEvent) {
+        val blocksToRemove = ArrayList(event.blockList())
+        val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
+
+        for (block in blocksToRemove) {
+            if (abs(block.z) <= borderSize) {
+                event.blockList().remove(block)
             }
         }
     }

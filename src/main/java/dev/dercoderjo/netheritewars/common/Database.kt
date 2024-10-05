@@ -70,19 +70,16 @@ class Database(plugin: NetheriteWars) {
     }
 
     fun getTeam(team: Teams): Team {
-        println(team.name)
         val teamSet = statement.executeQuery("SELECT * FROM teams WHERE color = '${team.name}'")
         teamSet.next()
         return Team(Teams.valueOf(teamSet.getString("color")), teamSet.getInt("netherite"))
     }
 
     fun setTeam(team: Team) {
-        println(team.netherite)
         statement.executeUpdate("UPDATE teams SET netherite = ${team.netherite} WHERE color = '${team.team}'")
     }
 
     fun setDeaths(player: Player) {
-        println(player.deaths)
         statement.executeUpdate("UPDATE players SET deaths = ${player.deaths} WHERE uuid = '${player.uuid}'")
     }
 

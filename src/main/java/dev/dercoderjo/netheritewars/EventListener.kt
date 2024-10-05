@@ -55,6 +55,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
         checkPositionInBorders(plugin, event.player)
         player.scoreboard = Bukkit.getScoreboardManager().newScoreboard
+
         player.scoreboard.registerNewObjective("netheritewars_netherite-player", Criteria.DUMMY, Component.empty()).apply { displaySlot = DisplaySlot.PLAYER_LIST }
         player.scoreboard.registerNewObjective("netheritewars_netherite-team", Criteria.DUMMY, Component.
         text("N").color(TextColor.fromHexString("#888888")).append(Component.
@@ -71,8 +72,8 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         text("r").color(TextColor.fromHexString("#595959"))).append(Component.
         text("s").color(TextColor.fromHexString("#555555")))
         ).apply { displaySlot = DisplaySlot.SIDEBAR }
-        player.scoreboard.registerNewTeam("red").apply { prefix(Component.text("[Rot] ").color(NamedTextColor.RED)) }
-        player.scoreboard.registerNewTeam("blue").apply { prefix(Component.text("[Blau] ").color(NamedTextColor.BLUE)) }
+        player.scoreboard.registerNewTeam("red").color(NamedTextColor.RED)
+        player.scoreboard.registerNewTeam("blue").color(NamedTextColor.BLUE)
     }
 
     @EventHandler
@@ -216,7 +217,9 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
             explodeBlockEntityWithNetherite(player)
             player.scoreboard.getObjective("netheritewars_netherite-team")?.apply {
                 if (player.persistentDataContainer.has(NamespacedKey("netheritewars", "stats"))) {
-                    displaySlot = DisplaySlot.SIDEBAR
+                    if (displaySlot != DisplaySlot.SIDEBAR) {
+                        displaySlot = DisplaySlot.SIDEBAR
+                    }
                     getScore("§9Blau").score = plugin.DATABASE.getTeam(Teams.BLUE).netherite
                     getScore("§cRot").score = plugin.DATABASE.getTeam(Teams.RED).netherite
                 } else {

@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import org.bukkit.GameRule
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.ShapedRecipe
 import org.bukkit.inventory.ShapelessRecipe
@@ -24,6 +25,10 @@ class NetheriteWars : JavaPlugin() {
 
         saveDefaultConfig()
 
+        for (world in Bukkit.getWorlds()) {
+            world.setGameRule(GameRule.KEEP_INVENTORY, true)
+            world.setGameRule(GameRule.SPAWN_RADIUS, 0)
+        }
 
         Bukkit.removeRecipe(NamespacedKey.minecraft("netherite_ingot"))
         Bukkit.removeRecipe(NamespacedKey.minecraft("netherite_ingot_from_netherite_block"))
@@ -53,7 +58,7 @@ class NetheriteWars : JavaPlugin() {
             for (player in Bukkit.getOnlinePlayers()) {
                 if (player.gameMode == GameMode.SPECTATOR && (player.location.world?.time ?: continue) <= 20 && player.persistentDataContainer.has(NamespacedKey("netheritewars", "respawn_time"))) {
                     player.gameMode = GameMode.SURVIVAL
-                    player.teleport(player.respawnLocation ?: player.player!!.world.spawnLocation)
+                    player.teleport(player.respawnLocation ?: Bukkit.getWorlds()[0].spawnLocation)
                     player.persistentDataContainer.remove(NamespacedKey("netheritewars", "respawn_time"))
                 }
 

@@ -71,9 +71,10 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         text("a").color(TextColor.fromHexString("#5E5E5E"))).append(Component.
         text("r").color(TextColor.fromHexString("#595959"))).append(Component.
         text("s").color(TextColor.fromHexString("#555555")))
-        ).apply { displaySlot = DisplaySlot.SIDEBAR }
-        player.scoreboard.registerNewTeam("red").color(NamedTextColor.RED)
-        player.scoreboard.registerNewTeam("blue").color(NamedTextColor.BLUE)
+        )
+
+        Bukkit.getScoreboardManager().mainScoreboard.getTeam(plugin.DATABASE.getPlayer(player.uniqueId.toString()).team.name)
+            ?.addEntities(player)
     }
 
     @EventHandler

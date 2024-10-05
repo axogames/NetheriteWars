@@ -54,6 +54,17 @@ class NetheriteWars : JavaPlugin() {
             objective.unregister()
         }
 
+        Bukkit.getScoreboardManager().mainScoreboard.registerNewTeam("Blue").apply {
+            color(NamedTextColor.BLUE)
+            setAllowFriendlyFire(false)
+            displayName(Component.text("Blau").color(NamedTextColor.BLUE))
+        }
+        Bukkit.getScoreboardManager().mainScoreboard.registerNewTeam("Red").apply {
+            color(NamedTextColor.RED)
+            setAllowFriendlyFire(false)
+            displayName(Component.text("Rot").color(NamedTextColor.RED))
+        }
+
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, {
             for (player in Bukkit.getOnlinePlayers()) {
                 if (player.gameMode == GameMode.SPECTATOR && (player.location.world?.time ?: continue) <= 20 && player.persistentDataContainer.has(NamespacedKey("netheritewars", "respawn_time"))) {

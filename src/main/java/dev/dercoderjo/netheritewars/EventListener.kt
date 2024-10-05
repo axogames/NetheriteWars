@@ -248,7 +248,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     fun onBlockPlace(event: BlockPlaceEvent) {
         //Kein Block darf innerhalb des Grenzgebietes platziert werden
         val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
-        if (abs(event.block.z) <= borderSize) {
+        if (abs(event.block.z) <= borderSize && !(plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).orga) && event.player.gameMode == GameMode.CREATIVE) {
             event.isCancelled = true
             return
         }
@@ -318,7 +318,7 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
     @EventHandler
     fun onBlockBreak(event: BlockBreakEvent) {
         val borderSize = plugin.CONFIG.getInt("BORDER_SIZE")
-        if (abs(event.block.z) <= borderSize) {
+        if (abs(event.block.z) <= borderSize && !(plugin.DATABASE.getPlayer(event.player.uniqueId.toString()).orga) && event.player.gameMode == GameMode.CREATIVE) {
             event.isCancelled = true
             return
         }

@@ -4,11 +4,13 @@ import dev.dercoderjo.netheritewars.NetheriteWars
 import java.sql.DriverManager
 import java.sql.Timestamp
 
-class Database(plugin: NetheriteWars) {
+class Database(val plugin: NetheriteWars) {
     val connection = DriverManager.getConnection(plugin.CONFIG.getString("DATABASE.URL"), plugin.CONFIG.getString("DATABASE.USER"), plugin.CONFIG.getString("DATABASE.PASSWORD"))
     val statement = connection.createStatement()
 
     fun getPlayer(uuid: String): Player {
+        checkConnection()
+
         val query = "SELECT * FROM players WHERE uuid = ?"
         val pstmt = connection.prepareStatement(query)
         pstmt.setString(1, uuid)
@@ -31,6 +33,8 @@ class Database(plugin: NetheriteWars) {
     }
 
     fun setPlayer(playerData: Player) {
+        checkConnection()
+
         val query = if (checkPlayer(playerData.uuid)) {
             "UPDATE players SET netherite = ?, deaths = ?, position = ?, team = ?, whitelisted = ?, orga = ? WHERE uuid = ?"
         } else {
@@ -61,6 +65,8 @@ class Database(plugin: NetheriteWars) {
     }
 
     fun checkPlayer(uuid: String): Boolean {
+        checkConnection()
+
         val playerSet = statement.executeQuery("SELECT * FROM players WHERE uuid = '$uuid'")
         return playerSet.next()
     }
@@ -70,20 +76,28 @@ class Database(plugin: NetheriteWars) {
     }
 
     fun getTeam(team: Teams): Team {
+        checkConnection()
+
         val teamSet = statement.executeQuery("SELECT * FROM teams WHERE color = '${team.name}'")
         teamSet.next()
         return Team(Teams.valueOf(teamSet.getString("color")), teamSet.getInt("netherite"))
     }
 
     fun setTeam(team: Team) {
+        checkConnection()
+
         statement.executeUpdate("UPDATE teams SET netherite = ${team.netherite} WHERE color = '${team.team}'")
     }
 
     fun setDeaths(player: Player) {
+        checkConnection()
+
         statement.executeUpdate("UPDATE players SET deaths = ${player.deaths} WHERE uuid = '${player.uuid}'")
     }
 
     fun getBattleRoyal(): BattleRoyal {
+        checkConnection()
+
         val stmt = connection.prepareStatement("SELECT * FROM battle_royal WHERE status != 'ENDED' ORDER BY ends_at DESC LIMIT 1")
         val resultSet = stmt.executeQuery()
         return if (resultSet.next()) {
@@ -94,6 +108,8 @@ class Database(plugin: NetheriteWars) {
     }
 
     fun setBattleRoyal(battleRoyal: BattleRoyal) {
+        checkConnection()
+
         val stmt = connection.prepareStatement("SELECT * FROM battle_royal WHERE status != 'ENDED'")
         val resultSet = stmt.executeQuery()
         if (resultSet.next()) {
@@ -124,6 +140,14 @@ class Database(plugin: NetheriteWars) {
                 insertStmt.setNull(3, java.sql.Types.BIGINT)
             }
             insertStmt.executeUpdate()
+        }
+    }
+
+    private fun checkConnection() {
+        try {
+            connection.isValid(5)
+        } catch (e: Exception) {
+            plugin.DATABASE = Database(plugin)
         }
     }
 }

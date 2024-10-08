@@ -17,7 +17,7 @@ import org.bukkit.potion.PotionEffectType
 
 class NetheriteWars : JavaPlugin() {
     val CONFIG = config
-    val DATABASE = Database(this)
+    var DATABASE = Database(this)
     var cachedBattleRoyalData: BattleRoyal? = null
 
     override fun onEnable() {

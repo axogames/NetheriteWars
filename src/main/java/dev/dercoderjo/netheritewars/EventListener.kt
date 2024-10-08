@@ -71,10 +71,9 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         text("a").color(TextColor.fromHexString("#5E5E5E"))).append(Component.
         text("r").color(TextColor.fromHexString("#595959"))).append(Component.
         text("s").color(TextColor.fromHexString("#555555")))
-        )
-
-        Bukkit.getScoreboardManager().mainScoreboard.getTeam(plugin.DATABASE.getPlayer(player.uniqueId.toString()).team.name)
-            ?.addEntities(player)
+        ).apply { displaySlot = DisplaySlot.SIDEBAR }
+        player.scoreboard.registerNewTeam("red").color(NamedTextColor.RED)
+        player.scoreboard.registerNewTeam("blue").color(NamedTextColor.BLUE)
     }
 
     @EventHandler
@@ -288,7 +287,6 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         if (event.entity.type ==  EntityType.PLAYER) {
             val player = event.entity as Player
             if (player.health - event.damage <= 0.0) {
-                event.cause
                 sendMessage(player, "Du bist gestorben und wirst am nächsten Morgen wiederbelebt")
                 player.gameMode = GameMode.SPECTATOR
                 player.persistentDataContainer.set(NamespacedKey("netheritewars", "respawn_time"), PersistentDataType.LONG, player.world.gameTime + (24000 - event.entity.world.time))
@@ -324,10 +322,6 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
         if ((abs(player.location.z) < borderSize || abs(damager.location.z) < borderSize) && entity.world.environment == World.Environment.NORMAL) {
             event.isCancelled = true
             sendMessage(damager, "Du kannst Spieler nicht auf der Grenze angreifen")
-        }
-
-        if (player.health - event.damage <= 0.0) {
-            dropNetherite(player, true)
         }
 
         entity.persistentDataContainer.set(NamespacedKey("netheritewars", "peace_cooldown"), PersistentDataType.LONG, System.currentTimeMillis() + 300000)

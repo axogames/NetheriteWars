@@ -8,6 +8,7 @@ import dev.dercoderjo.netheritewars.util.inRedVault
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.TitlePart
 import org.bukkit.*
 import org.bukkit.block.BlockState
@@ -58,19 +59,19 @@ class EventListener(private val plugin: NetheriteWars) : Listener {
 
         player.scoreboard.registerNewObjective("netheritewars_netherite-player", Criteria.DUMMY, Component.empty()).apply { displaySlot = DisplaySlot.PLAYER_LIST }
         player.scoreboard.registerNewObjective("netheritewars_netherite-team", Criteria.DUMMY, Component.
-        text("N").color(TextColor.fromHexString("#888888")).append(Component.
-        text("e").color(TextColor.fromHexString("#848484"))).append(Component.
-        text("t").color(TextColor.fromHexString("#808080"))).append(Component.
-        text("h").color(TextColor.fromHexString("#7B7B7B"))).append(Component.
-        text("e").color(TextColor.fromHexString("#777777"))).append(Component.
-        text("r").color(TextColor.fromHexString("#737373"))).append(Component.
-        text("i").color(TextColor.fromHexString("#6F6F6F"))).append(Component.
-        text("t").color(TextColor.fromHexString("#6A6A6A"))).append(Component.
-        text("e").color(TextColor.fromHexString("#666666"))).append(Component.
-        text("W").color(TextColor.fromHexString("#626262"))).append(Component.
-        text("a").color(TextColor.fromHexString("#5E5E5E"))).append(Component.
-        text("r").color(TextColor.fromHexString("#595959"))).append(Component.
-        text("s").color(TextColor.fromHexString("#555555")))
+        text("N").color(TextColor.fromHexString("#888888")).decorate(TextDecoration.BOLD).append(Component.
+        text("e").color(TextColor.fromHexString("#848484")).decorate(TextDecoration.BOLD)).append(Component.
+        text("t").color(TextColor.fromHexString("#808080")).decorate(TextDecoration.BOLD)).append(Component.
+        text("h").color(TextColor.fromHexString("#7B7B7B")).decorate(TextDecoration.BOLD)).append(Component.
+        text("e").color(TextColor.fromHexString("#777777")).decorate(TextDecoration.BOLD)).append(Component.
+        text("r").color(TextColor.fromHexString("#737373")).decorate(TextDecoration.BOLD)).append(Component.
+        text("i").color(TextColor.fromHexString("#6F6F6F")).decorate(TextDecoration.BOLD)).append(Component.
+        text("t").color(TextColor.fromHexString("#6A6A6A")).decorate(TextDecoration.BOLD)).append(Component.
+        text("e").color(TextColor.fromHexString("#666666")).decorate(TextDecoration.BOLD)).append(Component.
+        text("W").color(TextColor.fromHexString("#626262")).decorate(TextDecoration.BOLD)).append(Component.
+        text("a").color(TextColor.fromHexString("#5E5E5E")).decorate(TextDecoration.BOLD)).append(Component.
+        text("r").color(TextColor.fromHexString("#595959")).decorate(TextDecoration.BOLD)).append(Component.
+        text("s").color(TextColor.fromHexString("#555555")).decorate(TextDecoration.BOLD))
         ).apply { displaySlot = DisplaySlot.SIDEBAR }
         player.scoreboard.registerNewTeam("red").color(NamedTextColor.RED)
         player.scoreboard.registerNewTeam("blue").color(NamedTextColor.BLUE)

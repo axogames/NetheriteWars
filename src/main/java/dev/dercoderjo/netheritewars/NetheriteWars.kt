@@ -50,9 +50,7 @@ class NetheriteWars : JavaPlugin() {
         this.getCommand("stats")?.setExecutor(StatsCommand())
         this.getCommand("help")?.setExecutor(HelpCommand(this))
 
-        for (objective in Bukkit.getScoreboardManager().mainScoreboard.objectives) {
-            objective.unregister()
-        }
+        Bukkit.getScoreboardManager().newScoreboard
 
         Bukkit.getScoreboardManager().mainScoreboard.registerNewTeam("Blue").apply {
             color(NamedTextColor.BLUE)
